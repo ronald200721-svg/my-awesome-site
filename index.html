@@ -2,133 +2,66 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Простой Кликер</title>
+    <title>Защищенная картинка</title>
     <style>
-        /* Оформление внешнего вида */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-color: #f0f0f0;
+            /* Запрещаем выделение текста на всей странице */
+            user-select: none;
         }
 
-        .container {
-            text-align: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        .img-container {
+            position: relative;
+            display: inline-block;
         }
 
-        h1 { color: #333; }
-
-        #score {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #007bff;
-            margin: 1rem 0;
+        img {
+            width: 300px; 
+            height: 300px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border: 5px solid white;
+            
+            /* Запрещаем перетаскивание картинки мышкой */
+            -webkit-user-drag: none;
+            pointer-events: none; 
         }
 
-        /* Стили кнопки-кликера */
-        #click-btn {
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            transition: transform 0.1s, background-color 0.2s;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        #click-btn:active {
-            transform: scale(0.95);
-        }
-
-        #click-btn:hover {
-            background-color: #218838;
-        }
-
-        .upgrade-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        button.upgrade {
-            padding: 10px 20px;
-            background-color: #ffc107;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        /* Создаем невидимый слой поверх картинки для доп. защиты */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            z-index: 5;
         }
     </style>
 </head>
-<body>
-
-    <div class="container">
-        <h1>Кликер</h1>
-        <div id="score">0</div>
-        <button id="click-btn">Клик!</button>
-
-        <div class="upgrade-section">
-            <p>Улучшение: +1 за клик</p>
-            <button id="upgrade-btn" class="upgrade">Купить за 10</button>
-        </div>
+<body oncontextmenu="return false;"> <div class="img-container">
+        <div class="overlay"></div> <img src="https://pic.rutubelist.ru/user/35/4f/354fef426e58b253e4a6a998cf6271b4.jpg" alt="Защищенное фото">
     </div>
 
     <script>
-        // Логика игры
-        let score = 0;
-        let pointsPerClick = 1;
-        let upgradeCost = 10;
-
-        const scoreDisplay = document.getElementById('score');
-        const clickBtn = document.getElementById('click-btn');
-        const upgradeBtn = document.getElementById('upgrade-btn');
-
-        // Обработка клика
-        clickBtn.addEventListener('click', () => {
-            score += pointsPerClick;
-            updateDisplay();
-        });
-
-        // Покупка улучшения
-        upgradeBtn.addEventListener('click', () => {
-            if (score >= upgradeCost) {
-                score -= upgradeCost;
-                pointsPerClick += 1;
-                upgradeCost = Math.round(upgradeCost * 1.5); // Цена растет
-                updateDisplay();
+        // Дополнительная блокировка горячих клавиш (Ctrl+S, Ctrl+U, F12)
+        document.onkeydown = function(e) {
+            if (e.ctrlKey && 
+                (e.keyCode === 67 || 
+                 e.keyCode === 86 || 
+                 e.keyCode === 85 || 
+                 e.keyCode === 83)) {
+                return false;
+            } else if (e.keyCode === 123) {
+                return false;
             }
-        });
-
-        // Обновление текста на экране
-        function updateDisplay() {
-            scoreDisplay.textContent = score;
-            upgradeBtn.textContent = `Купить за ${upgradeCost}`;
-            
-            // Проверка: хватает ли денег на апгрейд
-            if (score >= upgradeCost) {
-                upgradeBtn.disabled = false;
-            } else {
-                upgradeBtn.disabled = true;
-            }
-        }
-
-        // Инициализация при запуске
-        updateDisplay();
+        };
     </script>
 
 </body>
