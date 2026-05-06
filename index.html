@@ -3,262 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TYclicker - Pro Edition</title>
+    <title>Ultimate Clicker All-in-One</title>
     <style>
-        :root {
-            --accent-color: #ff4757;
-            --bg-dark: rgba(30, 34, 39, 0.85);
-            --text-light: #ffffff;
-        }
-
         body {
-            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            font-family: 'Arial', sans-serif;
-            color: var(--text-light);
-            user-select: none;
-            overflow: hidden;
-            /* Фоновое изображение из предыдущего запроса */
-            background: url('https://avatars.mds.yandex.net/i?id=7a22116bf62b50356500473e4f9a8895_l-5094289-images-thumbs&n=13') no-repeat center center fixed;
-            background-size: cover;
+            margin: 0;
         }
 
-        /* HUD панель */
-        .hud {
-            background: var(--bg-dark);
-            padding: 20px;
-            border-radius: 0 0 20px 20px;
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            width: 90%;
-            max-width: 500px;
+            width: 320px;
         }
 
-        #score-container {
-            font-size: 52px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        #counter {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #28a745;
+            margin: 10px 0;
         }
 
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            font-size: 16px;
-            opacity: 0.9;
-        }
+        .stats p { font-size: 0.9rem; color: #666; margin-bottom: 20px; }
 
-        /* Контейнер с картинкой-кнопкой */
-        .click-area-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .img-container {
-            position: relative;
-            display: inline-block;
-            transition: transform 0.05s ease; /* Быстрая реакция на клик */
-            cursor: pointer;
-        }
-
-        .img-container:active {
-            transform: scale(0.92);
-        }
-
-        img {
-            width: 280px; 
-            height: 280px;
+        #clickBtn {
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
-            object-fit: cover;
-            box-shadow: 0 0 40px rgba(255, 71, 87, 0.4);
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            -webkit-user-drag: none;
-            pointer-events: none; 
-        }
-
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            z-index: 5;
-        }
-
-        /* Всплывающий текст */
-        .floating-text {
-            position: absolute;
-            color: #fff;
-            font-size: 36px;
+            border: 6px solid #f8f9fa;
+            background-color: #ffc107;
+            font-size: 1.2rem;
             font-weight: bold;
-            pointer-events: none;
-            animation: moveUp 0.7s ease-out forwards;
-            z-index: 100;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        @keyframes moveUp {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-120px) scale(1.2); opacity: 0; }
-        }
-
-        /* Апгрейды */
-        .upgrades {
-            background: var(--bg-dark);
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            padding: 20px;
-            backdrop-filter: blur(8px);
-            box-sizing: border-box;
-        }
-
-        .upgrade-btn {
-            background: #2f3542;
-            color: white;
-            border: 1px solid #57606f;
-            padding: 12px;
-            border-radius: 12px;
             cursor: pointer;
-            flex: 1;
-            max-width: 200px;
-            transition: 0.2s;
+            box-shadow: 0 8px 0 #d39e00;
+            transition: all 0.1s;
+            outline: none;
+            user-select: none;
         }
 
-        .upgrade-btn:disabled {
-            opacity: 0.4;
-            filter: grayscale(1);
-            cursor: not-allowed;
+        #clickBtn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #d39e00;
         }
 
-        .upgrade-btn b { display: block; font-size: 14px; }
-        .cost { color: #f1c40f; font-size: 13px; }
+        .shop {
+            margin-top: 25px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .shop-btn {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 8px 0;
+            padding: 10px;
+            border: none;
+            background: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .shop-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .price { font-weight: bold; color: #dc3545; }
+
+        .reset-link {
+            margin-top: 20px;
+            background: none;
+            border: none;
+            color: #bbb;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <div class="hud">
-        <div id="score-container">0</div>
+    <div class="container">
+        <h2 style="margin:0; color:#1e3c72;">Клик-Мастер</h2>
+        
         <div class="stats">
-            <div>Клик: <span id="power-val">1</span></div>
-            <div>Пассив: <span id="passive-val">0</span>/с</div>
+            <div id="counter">0</div>
+            <p>Авто-доход: <span id="aps-display">0</span>/сек</p>
         </div>
-    </div>
 
-    <div class="click-area-container">
-        <div class="img-container" id="click-area">
-            <div class="overlay"></div>
-            <img src="https://pic.rutubelist.ru/user/35/4f/354fef426e58b253e4a6a998cf6271b4.jpg" alt="Кликер">
+        <button id="clickBtn">КЛИК!</button>
+
+        <div class="shop">
+            <button id="upgradeClick" class="shop-btn">
+                <span>💪 Клик +1</span>
+                <span class="price">💰 <span id="clickCost">10</span></span>
+            </button>
+
+            <button id="upgradeAuto" class="shop-btn">
+                <span>🤖 Авто +1</span>
+                <span class="price">💰 <span id="autoCost">50</span></span>
+            </button>
         </div>
-    </div>
 
-    <div class="upgrades">
-        <button class="upgrade-btn" id="upg-click" disabled>
-            <b>Сила клика +1</b>
-            <span class="cost">Цена: <span id="cost-click">10</span></span>
-        </button>
-        <button class="upgrade-btn" id="upg-auto" disabled>
-            <b>Автоклик +1/с</b>
-            <span class="cost">Цена: <span id="cost-auto">50</span></span>
-        </button>
+        <button id="resetBtn" class="reset-link">Сбросить всё</button>
     </div>
 
     <script>
-        let score = 0;
-        let clickPower = 1;
-        let autoPower = 0;
-        
-        let costClick = 10;
-        let costAuto = 50;
+        let state = {
+            score: 0,
+            clickPower: 1,
+            autoClickRate: 0,
+            costs: { click: 10, auto: 50 }
+        };
 
-        const scoreEl = document.getElementById('score-container');
-        const clickArea = document.getElementById('click-area');
-        
-        // Предзагрузка звука
-        const audioSrc = "https://www.myinstants.com/media/sounds/mouse-click.mp3";
-        const mainAudio = new Audio(audioSrc);
-        mainAudio.preload = "auto";
-
-        // Функция проигрывания БЕЗ задержки
-        function playClickSound() {
-            const sound = mainAudio.cloneNode(); // Клонируем для возможности быстрого наложения звуков
-            sound.volume = 0.6;
-            sound.play();
-        }
+        const elements = {
+            counter: document.getElementById('counter'),
+            aps: document.getElementById('aps-display'),
+            mainBtn: document.getElementById('clickBtn'),
+            upgradeClick: document.getElementById('upgradeClick'),
+            upgradeAuto: document.getElementById('upgradeAuto'),
+            clickCost: document.getElementById('clickCost'),
+            autoCost: document.getElementById('autoCost'),
+            resetBtn: document.getElementById('resetBtn')
+        };
 
         function updateUI() {
-            scoreEl.textContent = Math.floor(score);
-            document.getElementById('power-val').textContent = clickPower;
-            document.getElementById('passive-val').textContent = autoPower;
-            
-            document.getElementById('cost-click').textContent = costClick;
-            document.getElementById('cost-auto').textContent = costAuto;
-
-            document.getElementById('upg-click').disabled = score < costClick;
-            document.getElementById('upg-auto').disabled = score < costAuto;
+            elements.counter.textContent = Math.floor(state.score);
+            elements.aps.textContent = state.autoClickRate;
+            elements.clickCost.textContent = state.costs.click;
+            elements.autoCost.textContent = state.costs.auto;
+            elements.upgradeClick.disabled = state.score < state.costs.click;
+            elements.upgradeAuto.disabled = state.score < state.costs.auto;
         }
 
-        // Клик по картинке
-        clickArea.addEventListener('pointerdown', (e) => {
-            score += clickPower;
-            playClickSound();
-            createFloatingText(e.clientX, e.clientY);
+        function save() { localStorage.setItem('clickerData', JSON.stringify(state)); }
+
+        function load() {
+            const saved = localStorage.getItem('clickerData');
+            if (saved) { state = JSON.parse(saved); updateUI(); }
+        }
+
+        elements.mainBtn.addEventListener('click', () => {
+            state.score += state.clickPower;
             updateUI();
         });
 
-        function createFloatingText(x, y) {
-            const text = document.createElement('div');
-            text.className = 'floating-text';
-            text.textContent = `+${clickPower}`;
-            text.style.left = `${x - 20}px`;
-            text.style.top = `${y - 40}px`;
-            document.body.appendChild(text);
-            setTimeout(() => text.remove(), 700);
-        }
-
-        // Покупка силы клика
-        document.getElementById('upg-click').onclick = () => {
-            if(score >= costClick) {
-                score -= costClick;
-                clickPower++;
-                costClick = Math.round(costClick * 1.6);
+        elements.upgradeClick.addEventListener('click', () => {
+            if (state.score >= state.costs.click) {
+                state.score -= state.costs.click;
+                state.clickPower += 1;
+                state.costs.click = Math.round(state.costs.click * 1.5);
                 updateUI();
+                save();
             }
-        };
+        });
 
-        // Покупка автокликера
-        document.getElementById('upg-auto').onclick = () => {
-            if(score >= costAuto) {
-                score -= costAuto;
-                autoPower++;
-                costAuto = Math.round(costAuto * 1.8);
+        elements.upgradeAuto.addEventListener('click', () => {
+            if (state.score >= state.costs.auto) {
+                state.score -= state.costs.auto;
+                state.autoClickRate += 1;
+                state.costs.auto = Math.round(state.costs.auto * 1.7);
                 updateUI();
+                save();
             }
-        };
+        });
 
-        // Пассивный доход
+        elements.resetBtn.addEventListener('click', () => {
+            if(confirm("Удалить прогресс?")) {
+                localStorage.removeItem('clickerData');
+                location.reload();
+            }
+        });
+
         setInterval(() => {
-            if(autoPower > 0) {
-                score += autoPower;
+            if (state.autoClickRate > 0) {
+                state.score += state.autoClickRate / 10;
                 updateUI();
             }
-        }, 1000);
+        }, 100);
 
-        // Защита от контекстного меню и клавиш
-        document.onkeydown = (e) => {
-            if (e.keyCode === 123 || (e.ctrlKey && [67, 86, 85, 83].includes(e.keyCode))) return false;
-        };
-
-        updateUI();
+        setInterval(save, 5000);
+        load();
     </script>
 </body>
 </html>
