@@ -1,196 +1,670 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Clicker All-in-One</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Кликер</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 320px;
-        }
+    :root {
+      --bg:        #0a0e1a;
+      --surface:   #111827;
+      --surface2:  #1e2a3a;
+      --border:    #1f3050;
+      --primary:   #3b82f6;
+      --primary-d: #2563eb;
+      --accent:    #f59e0b;
+      --accent-d:  #d97706;
+      --success:   #10b981;
+      --text:      #f1f5f9;
+      --muted:     #94a3b8;
+      --glow:      rgba(59,130,246,0.4);
+    }
 
-        #counter {
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: #28a745;
-            margin: 10px 0;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      overflow-x: hidden;
+    }
 
-        .stats p { font-size: 0.9rem; color: #666; margin-bottom: 20px; }
+    /* ── Stars background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 75%, rgba(255,255,255,.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 15% 50%, rgba(255,255,255,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 65% 55%, rgba(255,255,255,.5) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-        #clickBtn {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            border: 6px solid #f8f9fa;
-            background-color: #ffc107;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 8px 0 #d39e00;
-            transition: all 0.1s;
-            outline: none;
-            user-select: none;
-        }
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
 
-        #clickBtn:active {
-            transform: translateY(4px);
-            box-shadow: 0 4px 0 #d39e00;
-        }
+    .subtitle {
+      color: var(--muted);
+      font-size: .85rem;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+    }
 
-        .shop {
-            margin-top: 25px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 15px;
-        }
+    /* ── Layout ── */
+    .layout {
+      width: 100%;
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      position: relative;
+      z-index: 1;
+    }
 
-        .shop-btn {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin: 8px 0;
-            padding: 10px;
-            border: none;
-            background: #fff;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; }
+    }
 
-        .shop-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .price { font-weight: bold; color: #dc3545; }
+    /* ── Left panel ── */
+    .left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
 
-        .reset-link {
-            margin-top: 20px;
-            background: none;
-            border: none;
-            color: #bbb;
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 0.75rem;
-        }
-    </style>
+    /* ── Stats ── */
+    .stats {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--text);
+      transition: transform .1s;
+    }
+
+    .stat-value.bump {
+      transform: scale(1.15);
+      color: var(--accent);
+    }
+
+    /* ── Main button ── */
+    .click-area {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .click-btn {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: radial-gradient(circle at 35% 35%, #4fa3ff, var(--primary-d));
+      box-shadow:
+        0 0 0 8px rgba(59,130,246,.15),
+        0 0 0 16px rgba(59,130,246,.08),
+        0 20px 60px rgba(59,130,246,.35),
+        inset 0 -4px 12px rgba(0,0,0,.4),
+        inset 0 4px 12px rgba(255,255,255,.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      transition: transform .08s, box-shadow .08s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .click-btn::after {
+      content: '';
+      position: absolute;
+      top: 15%;
+      left: 20%;
+      width: 40%;
+      height: 30%;
+      background: radial-gradient(ellipse, rgba(255,255,255,.3) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .click-btn:active {
+      transform: scale(.92);
+      box-shadow:
+        0 0 0 4px rgba(59,130,246,.2),
+        0 8px 30px rgba(59,130,246,.25),
+        inset 0 4px 16px rgba(0,0,0,.5),
+        inset 0 -2px 8px rgba(255,255,255,.08);
+    }
+
+    .click-btn:hover:not(:active) {
+      transform: scale(1.04);
+      box-shadow:
+        0 0 0 10px rgba(59,130,246,.2),
+        0 0 0 20px rgba(59,130,246,.1),
+        0 24px 70px rgba(59,130,246,.45),
+        inset 0 -4px 12px rgba(0,0,0,.4),
+        inset 0 4px 12px rgba(255,255,255,.2);
+    }
+
+    /* ── Click multiplier badge ── */
+    .multiplier-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-d));
+      color: #000;
+      font-size: .7rem;
+      font-weight: 900;
+      padding: 4px 8px;
+      border-radius: 999px;
+      display: none;
+      animation: pop .2s ease;
+    }
+
+    .multiplier-badge.visible { display: block; }
+
+    /* ── Floating +1 particles ── */
+    .particle {
+      position: fixed;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--accent);
+      pointer-events: none;
+      animation: float-up .8s ease forwards;
+      z-index: 999;
+    }
+
+    @keyframes float-up {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-80px) scale(.6); }
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px;
+    }
+
+    .progress-bar {
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width .3s ease;
+      box-shadow: 0 0 10px var(--glow);
+    }
+
+    .progress-label {
+      font-size: .72rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* ── Right panel — shop ── */
+    .shop {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .shop-title {
+      font-size: .8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .upgrade-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color .2s, background .2s, transform .1s;
+      text-align: left;
+      width: 100%;
+      color: var(--text);
+    }
+
+    .upgrade-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--surface2);
+      transform: translateX(3px);
+    }
+
+    .upgrade-btn:active:not(:disabled) {
+      transform: translateX(1px);
+    }
+
+    .upgrade-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .upgrade-btn.affordable {
+      border-color: rgba(59,130,246,.5);
+      box-shadow: 0 0 12px rgba(59,130,246,.15);
+    }
+
+    .upg-icon {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      background: var(--surface2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upg-info { flex: 1; }
+
+    .upg-name {
+      font-size: .9rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .upg-desc {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .upg-cost {
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .upg-count {
+      font-size: .72rem;
+      font-weight: 700;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 999px;
+      padding: 2px 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── Achievements ── */
+    .achievements {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .achievement {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: .72rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: .35;
+      transition: opacity .4s, border-color .4s;
+    }
+
+    .achievement.unlocked {
+      opacity: 1;
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(245,158,11,.2);
+      animation: pop .3s ease;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(.8); }
+      60%  { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: .9rem;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      z-index: 1000;
+      transition: transform .3s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2 style="margin:0; color:#1e3c72;">Клик-Мастер</h2>
-        
-        <div class="stats">
-            <div id="counter">0</div>
-            <p>Авто-доход: <span id="aps-display">0</span>/сек</p>
-        </div>
+<h1>Кликер</h1>
+<p class="subtitle">Нажимай — становись богаче</p>
 
-        <button id="clickBtn">КЛИК!</button>
-
-        <div class="shop">
-            <button id="upgradeClick" class="shop-btn">
-                <span>💪 Клик +1</span>
-                <span class="price">💰 <span id="clickCost">10</span></span>
-            </button>
-
-            <button id="upgradeAuto" class="shop-btn">
-                <span>🤖 Авто +1</span>
-                <span class="price">💰 <span id="autoCost">50</span></span>
-            </button>
-        </div>
-
-        <button id="resetBtn" class="reset-link">Сбросить всё</button>
+<div class="layout">
+  <!-- LEFT -->
+  <div class="left">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Монеты</div>
+        <div class="stat-value" id="coins">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">За клик</div>
+        <div class="stat-value" id="per-click">1</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Всего кликов</div>
+        <div class="stat-value" id="total-clicks">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">В секунду</div>
+        <div class="stat-value" id="per-sec">0</div>
+      </div>
     </div>
 
-    <script>
-        let state = {
-            score: 0,
-            clickPower: 1,
-            autoClickRate: 0,
-            costs: { click: 10, auto: 50 }
-        };
+    <div class="click-area">
+      <button class="click-btn" id="mainBtn" aria-label="Кликнуть">⚡</button>
+      <span class="multiplier-badge" id="multiBadge">x?</span>
+    </div>
 
-        const elements = {
-            counter: document.getElementById('counter'),
-            aps: document.getElementById('aps-display'),
-            mainBtn: document.getElementById('clickBtn'),
-            upgradeClick: document.getElementById('upgradeClick'),
-            upgradeAuto: document.getElementById('upgradeAuto'),
-            clickCost: document.getElementById('clickCost'),
-            autoCost: document.getElementById('autoCost'),
-            resetBtn: document.getElementById('resetBtn')
-        };
+    <div style="width:100%">
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">До следующего уровня: 10 кликов</div>
+    </div>
 
-        function updateUI() {
-            elements.counter.textContent = Math.floor(state.score);
-            elements.aps.textContent = state.autoClickRate;
-            elements.clickCost.textContent = state.costs.click;
-            elements.autoCost.textContent = state.costs.auto;
-            elements.upgradeClick.disabled = state.score < state.costs.click;
-            elements.upgradeAuto.disabled = state.score < state.costs.auto;
-        }
+    <!-- Achievements -->
+    <div style="width:100%">
+      <div class="shop-title" style="margin-bottom:10px">Достижения</div>
+      <div class="achievements" id="achievements"></div>
+    </div>
+  </div>
 
-        function save() { localStorage.setItem('clickerData', JSON.stringify(state)); }
+  <!-- RIGHT — Shop -->
+  <div class="shop">
+    <div class="shop-title">Магазин улучшений</div>
+    <div id="shopItems"></div>
+  </div>
+</div>
 
-        function load() {
-            const saved = localStorage.getItem('clickerData');
-            if (saved) { state = JSON.parse(saved); updateUI(); }
-        }
+<div class="toast" id="toast"></div>
 
-        elements.mainBtn.addEventListener('click', () => {
-            state.score += state.clickPower;
-            updateUI();
-        });
+<script>
+  /* ── State ── */
+  let coins = 0;
+  let totalClicks = 0;
+  let clickPower = 1;
+  let perSecond = 0;
 
-        elements.upgradeClick.addEventListener('click', () => {
-            if (state.score >= state.costs.click) {
-                state.score -= state.costs.click;
-                state.clickPower += 1;
-                state.costs.click = Math.round(state.costs.click * 1.5);
-                updateUI();
-                save();
-            }
-        });
+  /* ── Upgrades config ── */
+  const upgrades = [
+    { id: 'cursor',  icon: '🖱️',  name: 'Курсор',        desc: '+1 за клик',        baseCost: 10,   owned: 0, type: 'click',  value: 1  },
+    { id: 'helper',  icon: '👷',  name: 'Помощник',       desc: '+1 монета/сек',     baseCost: 50,   owned: 0, type: 'auto',   value: 1  },
+    { id: 'factory', icon: '🏭',  name: 'Фабрика',        desc: '+5 монет/сек',      baseCost: 300,  owned: 0, type: 'auto',   value: 5  },
+    { id: 'mine',    icon: '⛏️',  name: 'Шахта',          desc: '+2 за клик',        baseCost: 200,  owned: 0, type: 'click',  value: 2  },
+    { id: 'rocket',  icon: '🚀',  name: 'Ракета',         desc: '+20 монет/сек',     baseCost: 1500, owned: 0, type: 'auto',   value: 20 },
+    { id: 'laser',   icon: '🔬',  name: 'Лаборатория',    desc: '+10 за клик',       baseCost: 2000, owned: 0, type: 'click',  value: 10 },
+    { id: 'portal',  icon: '🌀',  name: 'Портал',         desc: '+100 монет/сек',    baseCost: 8000, owned: 0, type: 'auto',   value: 100},
+  ];
 
-        elements.upgradeAuto.addEventListener('click', () => {
-            if (state.score >= state.costs.auto) {
-                state.score -= state.costs.auto;
-                state.autoClickRate += 1;
-                state.costs.auto = Math.round(state.costs.auto * 1.7);
-                updateUI();
-                save();
-            }
-        });
+  function upgradeCost(u) {
+    return Math.floor(u.baseCost * Math.pow(1.15, u.owned));
+  }
 
-        elements.resetBtn.addEventListener('click', () => {
-            if(confirm("Удалить прогресс?")) {
-                localStorage.removeItem('clickerData');
-                location.reload();
-            }
-        });
+  /* ── Achievements config ── */
+  const achievements = [
+    { id: 'click10',    icon: '👆', label: '10 кликов',       check: () => totalClicks >= 10    },
+    { id: 'click100',   icon: '💯', label: '100 кликов',      check: () => totalClicks >= 100   },
+    { id: 'coins100',   icon: '💰', label: '100 монет',        check: () => coins >= 100        },
+    { id: 'coins1k',    icon: '💎', label: '1 000 монет',      check: () => coins >= 1000       },
+    { id: 'coins10k',   icon: '👑', label: '10 000 монет',     check: () => coins >= 10000      },
+    { id: 'upgrade1',   icon: '🔧', label: 'Первое улучшение', check: () => upgrades.some(u=>u.owned>0) },
+    { id: 'allUpg',     icon: '🏆', label: 'Все улучшения',    check: () => upgrades.every(u=>u.owned>0) },
+  ];
+  const unlockedAch = new Set();
 
-        setInterval(() => {
-            if (state.autoClickRate > 0) {
-                state.score += state.autoClickRate / 10;
-                updateUI();
-            }
-        }, 100);
+  /* ── Levels ── */
+  const levels = [10, 50, 200, 500, 2000, 5000, 20000, 100000];
+  let levelIdx = 0;
 
-        setInterval(save, 5000);
-        load();
-    </script>
+  /* ── DOM refs ── */
+  const coinsEl      = document.getElementById('coins');
+  const perClickEl   = document.getElementById('per-click');
+  const totalClicksEl= document.getElementById('total-clicks');
+  const perSecEl     = document.getElementById('per-sec');
+  const progressBar  = document.getElementById('progressBar');
+  const progressLabel= document.getElementById('progressLabel');
+  const mainBtn      = document.getElementById('mainBtn');
+  const shopEl       = document.getElementById('shopItems');
+  const achEl        = document.getElementById('achievements');
+  const toastEl      = document.getElementById('toast');
+  const multiBadge   = document.getElementById('multiBadge');
+
+  /* ── Render ── */
+  function fmt(n) {
+    if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+    return Math.floor(n).toLocaleString('ru');
+  }
+
+  function renderStats() {
+    coinsEl.textContent      = fmt(coins);
+    perClickEl.textContent   = fmt(clickPower);
+    totalClicksEl.textContent= fmt(totalClicks);
+    perSecEl.textContent     = fmt(perSecond);
+
+    // Progress
+    const target = levels[Math.min(levelIdx, levels.length - 1)];
+    const prev   = levelIdx > 0 ? levels[levelIdx - 1] : 0;
+    const pct    = Math.min(((totalClicks - prev) / (target - prev)) * 100, 100);
+    progressBar.style.width = pct + '%';
+    if (levelIdx >= levels.length) {
+      progressLabel.textContent = 'Максимальный уровень достигнут!';
+    } else {
+      progressLabel.textContent = `Уровень ${levelIdx + 1} — до следующего: ${fmt(target - totalClicks)} кликов`;
+    }
+
+    // Multiplier badge
+    if (clickPower > 1) {
+      multiBadge.textContent = `x${clickPower}`;
+      multiBadge.classList.add('visible');
+    } else {
+      multiBadge.classList.remove('visible');
+    }
+  }
+
+  function renderShop() {
+    shopEl.innerHTML = '';
+    upgrades.forEach((u, i) => {
+      const cost = upgradeCost(u);
+      const canAfford = coins >= cost;
+      const btn = document.createElement('button');
+      btn.className = 'upgrade-btn' + (canAfford ? ' affordable' : '');
+      btn.disabled = !canAfford;
+      btn.innerHTML = `
+        <span class="upg-icon">${u.icon}</span>
+        <span class="upg-info">
+          <div class="upg-name">${u.name}</div>
+          <div class="upg-desc">${u.desc}</div>
+          <div class="upg-cost">💰 ${fmt(cost)}</div>
+        </span>
+        ${u.owned > 0 ? `<span class="upg-count">${u.owned}</span>` : ''}
+      `;
+      btn.addEventListener('click', () => buyUpgrade(i));
+      shopEl.appendChild(btn);
+    });
+  }
+
+  function renderAchievements() {
+    achEl.innerHTML = '';
+    achievements.forEach(a => {
+      const el = document.createElement('div');
+      el.className = 'achievement' + (unlockedAch.has(a.id) ? ' unlocked' : '');
+      el.textContent = `${a.icon} ${a.label}`;
+      achEl.appendChild(el);
+    });
+  }
+
+  /* ── Buy upgrade ── */
+  function buyUpgrade(i) {
+    const u = upgrades[i];
+    const cost = upgradeCost(u);
+    if (coins < cost) return;
+    coins -= cost;
+    u.owned++;
+    if (u.type === 'click') clickPower += u.value;
+    if (u.type === 'auto')  perSecond  += u.value;
+    renderStats();
+    renderShop();
+    checkAchievements();
+  }
+
+  /* ── Click handler ── */
+  mainBtn.addEventListener('click', (e) => {
+    coins += clickPower;
+    totalClicks++;
+
+    // Level up
+    if (levelIdx < levels.length && totalClicks >= levels[levelIdx]) {
+      levelIdx++;
+      showToast(`Уровень ${levelIdx}! Поздравляем!`);
+    }
+
+    renderStats();
+    renderShop();
+    checkAchievements();
+    spawnParticle(e.clientX, e.clientY, `+${fmt(clickPower)}`);
+
+    // Bump animation
+    coinsEl.classList.remove('bump');
+    void coinsEl.offsetWidth;
+    coinsEl.classList.add('bump');
+  });
+
+  /* ── Particle ── */
+  function spawnParticle(x, y, text) {
+    const el = document.createElement('div');
+    el.className = 'particle';
+    el.textContent = text;
+    el.style.left = (x - 20 + Math.random() * 40 - 20) + 'px';
+    el.style.top  = (y - 20) + 'px';
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+
+  /* ── Auto income ── */
+  let lastTick = performance.now();
+  function tick(now) {
+    const dt = (now - lastTick) / 1000;
+    lastTick = now;
+    if (perSecond > 0) {
+      coins += perSecond * dt;
+      renderStats();
+      renderShop();
+      checkAchievements();
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* ── Achievements ── */
+  function checkAchievements() {
+    achievements.forEach(a => {
+      if (!unlockedAch.has(a.id) && a.check()) {
+        unlockedAch.add(a.id);
+        renderAchievements();
+        showToast(`Достижение: ${a.icon} ${a.label}`);
+      }
+    });
+  }
+
+  /* ── Toast ── */
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+  }
+
+  /* ── Init ── */
+  renderStats();
+  renderShop();
+  renderAchievements();
+</script>
 </body>
 </html>
