@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Кликер</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
@@ -34,9 +34,12 @@
       align-items: center;
       padding: 24px 16px 48px;
       overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      touch-action: pan-x pan-y;
     }
 
-    /* ── Stars background ── */
     body::before {
       content: '';
       position: fixed;
@@ -77,7 +80,6 @@
       z-index: 1;
     }
 
-    /* ── Layout ── */
     .layout {
       width: 100%;
       max-width: 960px;
@@ -92,7 +94,6 @@
       .layout { grid-template-columns: 1fr; }
     }
 
-    /* ── Left panel ── */
     .left {
       display: flex;
       flex-direction: column;
@@ -100,7 +101,6 @@
       gap: 24px;
     }
 
-    /* ── Stats ── */
     .stats {
       width: 100%;
       display: grid;
@@ -137,7 +137,6 @@
       color: var(--accent);
     }
 
-    /* ── Main button ── */
     .click-area {
       position: relative;
       display: flex;
@@ -164,7 +163,9 @@
       font-size: 4rem;
       transition: transform .08s, box-shadow .08s;
       user-select: none;
+      -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
       position: relative;
       overflow: hidden;
     }
@@ -200,7 +201,6 @@
         inset 0 4px 12px rgba(255,255,255,.2);
     }
 
-    /* ── Click multiplier badge ── */
     .multiplier-badge {
       position: absolute;
       top: -8px;
@@ -217,7 +217,6 @@
 
     .multiplier-badge.visible { display: block; }
 
-    /* ── Floating +1 particles ── */
     .particle {
       position: fixed;
       font-size: 1.2rem;
@@ -233,7 +232,6 @@
       100% { opacity: 0; transform: translateY(-80px) scale(.6); }
     }
 
-    /* ── Progress bar ── */
     .progress-wrap {
       width: 100%;
       background: var(--surface);
@@ -257,7 +255,6 @@
       margin-top: 6px;
     }
 
-    /* ── Right panel — shop ── */
     .shop {
       display: flex;
       flex-direction: column;
@@ -287,19 +284,21 @@
       text-align: left;
       width: 100%;
       color: var(--text);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .upgrade-btn:hover:not(:disabled) {
+    .upgrade-btn:hover:not(.disabled) {
       border-color: var(--primary);
       background: var(--surface2);
       transform: translateX(3px);
     }
 
-    .upgrade-btn:active:not(:disabled) {
+    .upgrade-btn:active:not(.disabled) {
       transform: translateX(1px);
     }
 
-    .upgrade-btn:disabled {
+    .upgrade-btn.disabled {
       opacity: .45;
       cursor: not-allowed;
     }
@@ -351,7 +350,6 @@
       flex-shrink: 0;
     }
 
-    /* ── Achievements ── */
     .achievements {
       margin-top: 8px;
       display: flex;
@@ -385,7 +383,6 @@
       100% { transform: scale(1); }
     }
 
-    /* ── Toast ── */
     .toast {
       position: fixed;
       bottom: 32px;
@@ -413,7 +410,6 @@
 <p class="subtitle">Нажимай — становись богаче</p>
 
 <div class="layout">
-  <!-- LEFT -->
   <div class="left">
     <div class="stats">
       <div class="stat-card">
@@ -446,14 +442,12 @@
       <div class="progress-label" id="progressLabel">До следующего уровня: 10 кликов</div>
     </div>
 
-    <!-- Achievements -->
     <div style="width:100%">
       <div class="shop-title" style="margin-bottom:10px">Достижения</div>
       <div class="achievements" id="achievements"></div>
     </div>
   </div>
 
-  <!-- RIGHT — Shop -->
   <div class="shop">
     <div class="shop-title">Магазин улучшений</div>
     <div id="shopItems"></div>
@@ -463,6 +457,22 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  /* ── Prevent double-tap zoom ── */
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    if (now - lastTouchEnd < 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
   /* ── State ── */
   let coins = 0;
   let totalClicks = 0;
@@ -471,13 +481,13 @@
 
   /* ── Upgrades config ── */
   const upgrades = [
-    { id: 'cursor',  icon: '🖱️',  name: 'Курсор',        desc: '+1 за клик',        baseCost: 10,   owned: 0, type: 'click',  value: 1  },
-    { id: 'helper',  icon: '👷',  name: 'Помощник',       desc: '+1 монета/сек',     baseCost: 50,   owned: 0, type: 'auto',   value: 1  },
-    { id: 'factory', icon: '🏭',  name: 'Фабрика',        desc: '+5 монет/сек',      baseCost: 300,  owned: 0, type: 'auto',   value: 5  },
-    { id: 'mine',    icon: '⛏️',  name: 'Шахта',          desc: '+2 за клик',        baseCost: 200,  owned: 0, type: 'click',  value: 2  },
-    { id: 'rocket',  icon: '🚀',  name: 'Ракета',         desc: '+20 монет/сек',     baseCost: 1500, owned: 0, type: 'auto',   value: 20 },
-    { id: 'laser',   icon: '🔬',  name: 'Лаборатория',    desc: '+10 за клик',       baseCost: 2000, owned: 0, type: 'click',  value: 10 },
-    { id: 'portal',  icon: '🌀',  name: 'Портал',         desc: '+100 монет/сек',    baseCost: 8000, owned: 0, type: 'auto',   value: 100},
+    { id: 'cursor',  icon: '🖱️',  name: 'Курсор',        desc: '+1 за клик',        baseCost: 10,   owned: 0, type: 'click',  value: 1   },
+    { id: 'helper',  icon: '👷',  name: 'Помощник',       desc: '+1 монета/сек',     baseCost: 50,   owned: 0, type: 'auto',   value: 1   },
+    { id: 'factory', icon: '🏭',  name: 'Фабрика',        desc: '+5 монет/сек',      baseCost: 300,  owned: 0, type: 'auto',   value: 5   },
+    { id: 'mine',    icon: '⛏️',  name: 'Шахта',          desc: '+2 за клик',        baseCost: 200,  owned: 0, type: 'click',  value: 2   },
+    { id: 'rocket',  icon: '🚀',  name: 'Ракета',         desc: '+20 монет/сек',     baseCost: 1500, owned: 0, type: 'auto',   value: 20  },
+    { id: 'laser',   icon: '🔬',  name: 'Лаборатория',    desc: '+10 за клик',       baseCost: 2000, owned: 0, type: 'click',  value: 10  },
+    { id: 'portal',  icon: '🌀',  name: 'Портал',         desc: '+100 монет/сек',    baseCost: 8000, owned: 0, type: 'auto',   value: 100 },
   ];
 
   function upgradeCost(u) {
@@ -488,11 +498,11 @@
   const achievements = [
     { id: 'click10',    icon: '👆', label: '10 кликов',       check: () => totalClicks >= 10    },
     { id: 'click100',   icon: '💯', label: '100 кликов',      check: () => totalClicks >= 100   },
-    { id: 'coins100',   icon: '💰', label: '100 монет',        check: () => coins >= 100        },
-    { id: 'coins1k',    icon: '💎', label: '1 000 монет',      check: () => coins >= 1000       },
-    { id: 'coins10k',   icon: '👑', label: '10 000 монет',     check: () => coins >= 10000      },
-    { id: 'upgrade1',   icon: '🔧', label: 'Первое улучшение', check: () => upgrades.some(u=>u.owned>0) },
-    { id: 'allUpg',     icon: '🏆', label: 'Все улучшения',    check: () => upgrades.every(u=>u.owned>0) },
+    { id: 'coins100',   icon: '💰', label: '100 монет',        check: () => coins >= 100         },
+    { id: 'coins1k',    icon: '💎', label: '1 000 монет',      check: () => coins >= 1000        },
+    { id: 'coins10k',   icon: '👑', label: '10 000 монет',     check: () => coins >= 10000       },
+    { id: 'upgrade1',   icon: '🔧', label: 'Первое улучшение', check: () => upgrades.some(u => u.owned > 0) },
+    { id: 'allUpg',     icon: '🏆', label: 'Все улучшения',    check: () => upgrades.every(u => u.owned > 0) },
   ];
   const unlockedAch = new Set();
 
@@ -500,34 +510,73 @@
   const levels = [10, 50, 200, 500, 2000, 5000, 20000, 100000];
   let levelIdx = 0;
 
-  /* ── DOM refs ── */
-  const coinsEl      = document.getElementById('coins');
-  const perClickEl   = document.getElementById('per-click');
-  const totalClicksEl= document.getElementById('total-clicks');
-  const perSecEl     = document.getElementById('per-sec');
-  const progressBar  = document.getElementById('progressBar');
-  const progressLabel= document.getElementById('progressLabel');
-  const mainBtn      = document.getElementById('mainBtn');
-  const shopEl       = document.getElementById('shopItems');
-  const achEl        = document.getElementById('achievements');
-  const toastEl      = document.getElementById('toast');
-  const multiBadge   = document.getElementById('multiBadge');
+  /* ── LocalStorage save/load ── */
+  const SAVE_KEY = 'clicker_save_v1';
 
-  /* ── Render ── */
+  function saveGame() {
+    const data = {
+      coins,
+      totalClicks,
+      clickPower,
+      perSecond,
+      levelIdx,
+      upgrades: upgrades.map(u => u.owned),
+      achievements: Array.from(unlockedAch),
+    };
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch(e) {}
+  }
+
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      coins       = data.coins       ?? 0;
+      totalClicks = data.totalClicks ?? 0;
+      clickPower  = data.clickPower  ?? 1;
+      perSecond   = data.perSecond   ?? 0;
+      levelIdx    = data.levelIdx    ?? 0;
+      if (Array.isArray(data.upgrades)) {
+        data.upgrades.forEach((owned, i) => {
+          if (upgrades[i]) upgrades[i].owned = owned;
+        });
+      }
+      if (Array.isArray(data.achievements)) {
+        data.achievements.forEach(id => unlockedAch.add(id));
+      }
+    } catch(e) {}
+  }
+
+  /* ── DOM refs ── */
+  const coinsEl       = document.getElementById('coins');
+  const perClickEl    = document.getElementById('per-click');
+  const totalClicksEl = document.getElementById('total-clicks');
+  const perSecEl      = document.getElementById('per-sec');
+  const progressBar   = document.getElementById('progressBar');
+  const progressLabel = document.getElementById('progressLabel');
+  const mainBtn       = document.getElementById('mainBtn');
+  const shopEl        = document.getElementById('shopItems');
+  const achEl         = document.getElementById('achievements');
+  const toastEl       = document.getElementById('toast');
+  const multiBadge    = document.getElementById('multiBadge');
+
+  /* ── Format number ── */
   function fmt(n) {
-    if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
-    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
-    if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
     return Math.floor(n).toLocaleString('ru');
   }
 
+  /* ── Render stats ── */
   function renderStats() {
-    coinsEl.textContent      = fmt(coins);
-    perClickEl.textContent   = fmt(clickPower);
-    totalClicksEl.textContent= fmt(totalClicks);
-    perSecEl.textContent     = fmt(perSecond);
+    coinsEl.textContent       = fmt(coins);
+    perClickEl.textContent    = fmt(clickPower);
+    totalClicksEl.textContent = fmt(totalClicks);
+    perSecEl.textContent      = fmt(perSecond);
 
-    // Progress
     const target = levels[Math.min(levelIdx, levels.length - 1)];
     const prev   = levelIdx > 0 ? levels[levelIdx - 1] : 0;
     const pct    = Math.min(((totalClicks - prev) / (target - prev)) * 100, 100);
@@ -538,7 +587,6 @@
       progressLabel.textContent = `Уровень ${levelIdx + 1} — до следующего: ${fmt(target - totalClicks)} кликов`;
     }
 
-    // Multiplier badge
     if (clickPower > 1) {
       multiBadge.textContent = `x${clickPower}`;
       multiBadge.classList.add('visible');
@@ -547,73 +595,110 @@
     }
   }
 
-  function renderShop() {
+  /* ── Build shop (once) ── */
+  function buildShop() {
     shopEl.innerHTML = '';
     upgrades.forEach((u, i) => {
       const cost = upgradeCost(u);
-      const canAfford = coins >= cost;
-      const btn = document.createElement('button');
-      btn.className = 'upgrade-btn' + (canAfford ? ' affordable' : '');
-      btn.disabled = !canAfford;
+      const canAfford = Math.floor(coins) >= cost;
+      const btn = document.createElement('div');
+      btn.className = 'upgrade-btn' + (canAfford ? ' affordable' : ' disabled');
+      btn.dataset.index = i;
       btn.innerHTML = `
         <span class="upg-icon">${u.icon}</span>
         <span class="upg-info">
           <div class="upg-name">${u.name}</div>
           <div class="upg-desc">${u.desc}</div>
-          <div class="upg-cost">💰 ${fmt(cost)}</div>
+          <div class="upg-cost" data-cost>💰 ${fmt(cost)}</div>
         </span>
-        ${u.owned > 0 ? `<span class="upg-count">${u.owned}</span>` : ''}
+        <span class="upg-count" data-count style="display:${u.owned > 0 ? 'inline' : 'none'}">${u.owned}</span>
       `;
-      btn.addEventListener('click', () => buyUpgrade(i));
       shopEl.appendChild(btn);
     });
   }
 
-  function renderAchievements() {
-    achEl.innerHTML = '';
-    achievements.forEach(a => {
-      const el = document.createElement('div');
-      el.className = 'achievement' + (unlockedAch.has(a.id) ? ' unlocked' : '');
-      el.textContent = `${a.icon} ${a.label}`;
-      achEl.appendChild(el);
+  /* ── Update shop in place (no DOM recreation) ── */
+  function updateShop() {
+    const buttons = shopEl.querySelectorAll('.upgrade-btn');
+    buttons.forEach((btn, i) => {
+      const u = upgrades[i];
+      const cost = upgradeCost(u);
+      const canAfford = Math.floor(coins) >= cost;
+      btn.classList.toggle('affordable', canAfford);
+      btn.classList.toggle('disabled', !canAfford);
+      const costEl = btn.querySelector('[data-cost]');
+      if (costEl) costEl.textContent = `💰 ${fmt(cost)}`;
+      const countEl = btn.querySelector('[data-count]');
+      if (countEl) {
+        countEl.textContent = u.owned;
+        countEl.style.display = u.owned > 0 ? 'inline' : 'none';
+      }
     });
   }
+
+  /* ── Event delegation for shop clicks ── */
+  shopEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.upgrade-btn');
+    if (!btn || btn.classList.contains('disabled')) return;
+    const i = parseInt(btn.dataset.index, 10);
+    buyUpgrade(i);
+  });
+
+  /* ── Touch support for shop (prevent ghost clicks) ── */
+  shopEl.addEventListener('touchend', (e) => {
+    const btn = e.target.closest('.upgrade-btn');
+    if (!btn || btn.classList.contains('disabled')) return;
+    e.preventDefault();
+    const i = parseInt(btn.dataset.index, 10);
+    buyUpgrade(i);
+  }, { passive: false });
 
   /* ── Buy upgrade ── */
   function buyUpgrade(i) {
     const u = upgrades[i];
     const cost = upgradeCost(u);
-    if (coins < cost) return;
+    if (Math.floor(coins) < cost) return;
     coins -= cost;
     u.owned++;
     if (u.type === 'click') clickPower += u.value;
     if (u.type === 'auto')  perSecond  += u.value;
     renderStats();
-    renderShop();
+    updateShop();
     checkAchievements();
+    saveGame();
   }
 
-  /* ── Click handler ── */
-  mainBtn.addEventListener('click', (e) => {
+  /* ── Main button click ── */
+  function handleClick(clientX, clientY) {
     coins += clickPower;
     totalClicks++;
 
-    // Level up
     if (levelIdx < levels.length && totalClicks >= levels[levelIdx]) {
       levelIdx++;
       showToast(`Уровень ${levelIdx}! Поздравляем!`);
     }
 
     renderStats();
-    renderShop();
+    updateShop();
     checkAchievements();
-    spawnParticle(e.clientX, e.clientY, `+${fmt(clickPower)}`);
+    spawnParticle(clientX, clientY, `+${fmt(clickPower)}`);
 
-    // Bump animation
     coinsEl.classList.remove('bump');
     void coinsEl.offsetWidth;
     coinsEl.classList.add('bump');
+
+    saveGame();
+  }
+
+  mainBtn.addEventListener('click', (e) => {
+    handleClick(e.clientX, e.clientY);
   });
+
+  mainBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    handleClick(t.clientX, t.clientY);
+  }, { passive: false });
 
   /* ── Particle ── */
   function spawnParticle(x, y, text) {
@@ -628,28 +713,46 @@
 
   /* ── Auto income ── */
   let lastTick = performance.now();
+  let saveTimer = 0;
   function tick(now) {
     const dt = (now - lastTick) / 1000;
     lastTick = now;
     if (perSecond > 0) {
       coins += perSecond * dt;
       renderStats();
-      renderShop();
+      updateShop();
       checkAchievements();
+    }
+    saveTimer += dt;
+    if (saveTimer >= 5) {
+      saveTimer = 0;
+      saveGame();
     }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 
   /* ── Achievements ── */
+  function renderAchievements() {
+    achEl.innerHTML = '';
+    achievements.forEach(a => {
+      const el = document.createElement('div');
+      el.className = 'achievement' + (unlockedAch.has(a.id) ? ' unlocked' : '');
+      el.textContent = `${a.icon} ${a.label}`;
+      achEl.appendChild(el);
+    });
+  }
+
   function checkAchievements() {
+    let changed = false;
     achievements.forEach(a => {
       if (!unlockedAch.has(a.id) && a.check()) {
         unlockedAch.add(a.id);
-        renderAchievements();
+        changed = true;
         showToast(`Достижение: ${a.icon} ${a.label}`);
       }
     });
+    if (changed) renderAchievements();
   }
 
   /* ── Toast ── */
@@ -662,8 +765,9 @@
   }
 
   /* ── Init ── */
+  loadGame();
   renderStats();
-  renderShop();
+  buildShop();
   renderAchievements();
 </script>
 </body>
