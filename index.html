@@ -79,7 +79,6 @@
       z-index: 1;
     }
 
-    /* Модальное окно авторизации */
     .modal {
       position: fixed;
       inset: 0;
@@ -183,7 +182,6 @@
       color: var(--muted);
     }
 
-    /* Основной контейнер игры (скрыт до входа) */
     #gameContainer {
       width: 100%;
       max-width: 1200px;
@@ -768,7 +766,6 @@
   let lastSentScore = -1;
   let sseSource = null;
 
-  // Конфигурация улучшений (полностью из первого варианта)
   const upgrades = [
     { id: 'cursor',  icon: '🖱️', name: 'Курсор',        desc: '+1 за клик',        baseCost: 10,   type: 'click',  value: 1 },
     { id: 'helper',  icon: '👷', name: 'Помощник',       desc: '+1 монета/сек',     baseCost: 50,   type: 'auto',   value: 1 },
@@ -779,7 +776,6 @@
     { id: 'portal',  icon: '🌀', name: 'Портал',         desc: '+100 монет/сек',    baseCost: 8000, type: 'auto',   value: 100 },
   ];
 
-  // Достижения (как в первом варианте)
   const achievementsList = [
     { id: 'click10',    icon: '👆', label: '10 кликов',       check: () => gameData.totalClicks >= 10    },
     { id: 'click100',   icon: '💯', label: '100 кликов',      check: () => gameData.totalClicks >= 100   },
@@ -792,7 +788,6 @@
 
   const levels = [10, 50, 200, 500, 2000, 5000, 20000, 100000];
 
-  // Вспомогательные функции
   function fmt(n) {
     if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
     if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
@@ -811,7 +806,6 @@
     setTimeout(() => toast.classList.remove('show'), 2800);
   }
 
-  // Запросы с авторизацией
   async function authFetch(url, options = {}) {
     const headers = { 'Content-Type': 'application/json', ...options.headers };
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -823,7 +817,6 @@
     return res;
   }
 
-  // Сохранить игру на сервер
   async function saveGameToServer() {
     if (!gameData || !token) return;
     try {
@@ -842,15 +835,15 @@
     } catch(e) { console.warn('Save error', e); }
   }
 
-  // Загрузка данных пользователя
   async function loadUserData() {
     try {
       const res = await authFetch(`${API_BASE}/me`);
       const data = await res.json();
       currentUser = data.username;
       gameData = data.gameData;
+      // Округляем монеты при загрузке (на случай старых дробных значений)
+      if (gameData.coins !== undefined) gameData.coins = Math.floor(gameData.coins);
       document.getElementById('currentUsername').textContent = currentUser;
-      // Инициализация структур
       if (!gameData.upgrades) gameData.upgrades = upgrades.map(() => 0);
       if (!gameData.achievements) gameData.achievements = [];
       if (gameData.clickPower === undefined) gameData.clickPower = 1;
@@ -869,7 +862,6 @@
     }
   }
 
-  // Рендер всей игры
   function renderAll() {
     if (!gameData) return;
     document.getElementById('coins').textContent = fmt(gameData.coins);
@@ -901,7 +893,7 @@
     upgrades.forEach((u, idx) => {
       const owned = gameData.upgrades[idx] || 0;
       const cost = upgradeCost(owned, u.baseCost);
-      const canAfford = gameData.coins >= cost;
+      const canAfford = Math.floor(gameData.coins) >= cost;
       const btn = document.createElement('div');
       btn.className = `upgrade-btn ${canAfford ? 'affordable' : 'disabled'}`;
       btn.dataset.index = idx;
@@ -923,8 +915,11 @@
     const u = upgrades[idx];
     const owned = gameData.upgrades[idx];
     const cost = upgradeCost(owned, u.baseCost);
-    if (gameData.coins < cost) return;
+    // Используем Math.floor для точного сравнения целой части монет
+    if (Math.floor(gameData.coins) < cost) return;
     gameData.coins -= cost;
+    // Округляем после покупки, чтобы убрать накопившуюся дробную часть
+    gameData.coins = Math.floor(gameData.coins);
     gameData.upgrades[idx]++;
     if (u.type === 'click') gameData.clickPower += u.value;
     if (u.type === 'auto') gameData.perSecond += u.value;
@@ -966,6 +961,8 @@
     lastTick = now;
     if (gameData.perSecond > 0) {
       gameData.coins += gameData.perSecond * dt;
+      // Округляем монеты до целого числа после каждого пассивного тика
+      gameData.coins = Math.floor(gameData.coins);
       renderAll();
       checkAchievements();
       saveGameToServer();
@@ -977,7 +974,6 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // Достижения
   function renderAchievements() {
     const container = document.getElementById('achievements');
     container.innerHTML = '';
@@ -1005,7 +1001,6 @@
     }
   }
 
-  // Чат и лидерборд
   function connectChatSSE() {
     if (sseSource) sseSource.close();
     sseSource = new EventSource(`${API_BASE}/messages/stream`);
@@ -1082,7 +1077,6 @@
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m));
   }
 
-  // Авторизация
   async function login(username, password) {
     try {
       const res = await fetch(`${API_BASE}/login`, {
@@ -1134,7 +1128,6 @@
     document.getElementById('authModal').classList.add('active');
   }
 
-  // Переключение вкладок
   document.querySelectorAll('.auth-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -1152,7 +1145,6 @@
   document.getElementById('chatInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
   document.getElementById('refreshLeaderboardBtn').onclick = fetchLeaderboard;
 
-  // Автоматический вход по токену
   if (token) {
     (async () => {
       try {
