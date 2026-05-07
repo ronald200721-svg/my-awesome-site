@@ -1,5 +1,5 @@
 /**
- * Сервер для кликера с регистрацией, авторизацией и сохранением прогресса
+ * Сервер для кликера с регистрацией, авторизацией, сохранением прогресса и онлайн-статусом
  * Работает без внешних зависимостей (только встроенные модули Node.js)
  */
 
@@ -21,6 +21,10 @@ const LEADERBOARD_FILE = path.join(DATA_DIR, 'leaderboard.json');
 
 // Хранилище сессий (токен -> username)
 const sessions = new Map();
+
+// Хранилище онлайн‑пользователей (username -> последний ping в ms)
+const onlineUsers = new Map();
+const ONLINE_TTL = 15000; // 15 секунд
 
 // Настройки
 const MAX_MESSAGES = 100;
@@ -101,6 +105,31 @@ function updateLeaderboardFromGameData(username) {
   saveLeaderboard();
   return true;
 }
+
+/* ---------- Онлайн ---------- */
+function cleanOnlineUsers() {
+  const now = Date.now();
+  for (const [username, lastPing] of onlineUsers.entries()) {
+    if (now - lastPing > ONLINE_TTL) {
+      onlineUsers.delete(username);
+    }
+  }
+}
+
+function updateOnlineStatus(username) {
+  onlineUsers.set(username, Date.now());
+  cleanOnlineUsers();
+}
+
+function getOnlineCount() {
+  cleanOnlineUsers();
+  return onlineUsers.size;
+}
+
+// Периодическая очистка онлайна (каждые 10 секунд)
+setInterval(() => {
+  cleanOnlineUsers();
+}, 10000);
 
 /* ---------- Аутентификация и сессии ---------- */
 function generateToken() {
@@ -265,6 +294,16 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   
+  // ---- ОНЛАЙН: ОТПРАВИТЬ HEARTBEAT И ПОЛУЧИТЬ КОЛИЧЕСТВО ОНЛАЙН ----
+  if (pathname === '/api/heartbeat' && req.method === 'POST') {
+    const auth = checkAuth(req, res);
+    if (!auth) return;
+    updateOnlineStatus(auth.username);
+    const online = getOnlineCount();
+    sendJSON(res, 200, { online });
+    return;
+  }
+  
   // ---- ЧАТ: ПОЛУЧИТЬ СООБЩЕНИЯ ----
   if (pathname === '/api/messages' && req.method === 'GET') {
     sendJSON(res, 200, { messages });
@@ -314,7 +353,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   
-  // ---- ОБНОВЛЕНИЕ ЛИДЕРБОРДА (вызывается автоматически через savegame, но оставим для совместимости) ----
+  // ---- ОБНОВЛЕНИЕ ЛИДЕРБОРДА (вызывается автоматически через savegame) ----
   if (pathname === '/api/leaderboard/update' && req.method === 'POST') {
     const auth = checkAuth(req, res);
     if (!auth) return;

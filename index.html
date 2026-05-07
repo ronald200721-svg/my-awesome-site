@@ -205,6 +205,15 @@
       font-weight: bold;
       box-shadow: 0 0 8px rgba(59,130,246,0.3);
     }
+    .online-count {
+      background: var(--surface2);
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
     .logout-btn {
       background: none;
       border: 1px solid var(--border);
@@ -706,6 +715,7 @@
 <div id="gameContainer">
   <div class="userbar">
     <span class="username-badge" id="currentUsername"></span>
+    <span id="onlineCount" class="online-count">👥 Онлайн: --</span>
     <button class="logout-btn" id="logoutBtn">Выйти</button>
   </div>
   <div class="layout">
@@ -765,7 +775,8 @@
   let gameData = null;
   let lastSentScore = -1;
   let sseSource = null;
-  let passiveInterval = null; // интервал пассивного дохода
+  let passiveInterval = null;
+  let heartbeatInterval = null;
 
   const upgrades = [
     { id: 'cursor',  icon: '🖱️', name: 'Курсор',        desc: '+1 за клик',        baseCost: 10,   type: 'click',  value: 1 },
@@ -796,7 +807,6 @@
     return Math.floor(n).toLocaleString();
   }
 
-  // целая стоимость (устраняем дробные копейки)
   function upgradeCost(owned, base) {
     return Math.floor(base * Math.pow(1.15, owned));
   }
@@ -826,7 +836,7 @@
         method: 'POST',
         body: JSON.stringify({ gameData })
       });
-      const currentScore = gameData.coins; // теперь всегда целое
+      const currentScore = gameData.coins;
       if (currentScore !== lastSentScore) {
         lastSentScore = currentScore;
         await authFetch(`${API_BASE}/leaderboard/update`, {
@@ -843,7 +853,6 @@
       const data = await res.json();
       currentUser = data.username;
       gameData = data.gameData;
-      // Гарантия целых монет
       if (gameData.coins !== undefined) gameData.coins = Math.floor(gameData.coins);
       document.getElementById('currentUsername').textContent = currentUser;
       if (!gameData.upgrades) gameData.upgrades = upgrades.map(() => 0);
@@ -855,6 +864,7 @@
       renderAll();
       checkAchievements(true);
       startPassiveIncome();
+      startHeartbeat();
       connectChatSSE();
       fetchLeaderboard();
       setInterval(() => fetchLeaderboard(), 15000);
@@ -917,7 +927,6 @@
     const u = upgrades[idx];
     const owned = gameData.upgrades[idx];
     const cost = upgradeCost(owned, u.baseCost);
-    // строгая проверка на целых монетах
     if (gameData.coins < cost) return;
     gameData.coins -= cost;
     gameData.upgrades[idx]++;
@@ -954,7 +963,6 @@
     setTimeout(() => el.remove(), 800);
   }
 
-  // Пассивный доход только целыми числами, раз в секунду
   function startPassiveIncome() {
     if (passiveInterval) clearInterval(passiveInterval);
     passiveInterval = setInterval(() => {
@@ -1077,6 +1085,32 @@
     return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m));
   }
 
+  async function updateOnlineCount() {
+    if (!token) return;
+    try {
+      const res = await authFetch(`${API_BASE}/heartbeat`, { method: 'POST' });
+      const data = await res.json();
+      if (data.online !== undefined) {
+        document.getElementById('onlineCount').textContent = `👥 Онлайн: ${data.online}`;
+      }
+    } catch (e) {
+      console.warn('Heartbeat error', e);
+    }
+  }
+
+  function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    updateOnlineCount();
+    heartbeatInterval = setInterval(() => updateOnlineCount(), 3000);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+    }
+  }
+
   async function login(username, password) {
     try {
       const res = await fetch(`${API_BASE}/login`, {
@@ -1120,6 +1154,7 @@
 
   function logout() {
     stopPassiveIncome();
+    stopHeartbeat();
     token = null;
     localStorage.removeItem('token');
     currentUser = null;
@@ -1127,6 +1162,7 @@
     if (sseSource) sseSource.close();
     document.getElementById('gameContainer').style.display = 'none';
     document.getElementById('authModal').classList.add('active');
+    document.getElementById('onlineCount').textContent = '👥 Онлайн: --';
   }
 
   document.querySelectorAll('.auth-tab').forEach(tab => {
