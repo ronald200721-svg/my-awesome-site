@@ -1,18 +1,13 @@
-/**
- * Сервер для кликера с общим чатом и таблицей лидеров
- * Оптимизировано для работы на Render.com
- */
-
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 const url  = require('url');
 
-// На Render важно использовать 0.0.0.0 и динамический PORT
+// На Render порт назначается динамически. Слушать нужно 0.0.0.0.
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0'; 
 
-// Директория для данных. /tmp используется для временной записи на Render.
+// Директория для данных. /tmp используется для возможности записи на Render.
 const DATA_DIR = process.env.RENDER ? '/tmp' : __dirname;
 
 const HTML_FILE      = path.join(__dirname, 'index.html');
@@ -22,38 +17,26 @@ const LEADERBOARD_FILE = path.join(DATA_DIR, 'leaderboard.json');
 const MAX_MESSAGES = 100;
 const MAX_LEADERS  = 50; 
 
-/* ── Хранилище сообщений ── */
 let messages = [];
+let leaderboard = [];
 
+/* ── Хранилища данных ── */
 function loadMessages() {
-  try {
-    if (fs.existsSync(MESSAGES_FILE)) {
-      messages = JSON.parse(fs.readFileSync(MESSAGES_FILE, 'utf8'));
-    }
-  } catch (e) { messages = []; }
+  try { if (fs.existsSync(MESSAGES_FILE)) messages = JSON.parse(fs.readFileSync(MESSAGES_FILE, 'utf8')); }
+  catch (e) { messages = []; }
 }
 
 function saveMessages() {
-  try {
-    fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2));
-  } catch (e) { console.error('Ошибка записи сообщений:', e); }
+  try { fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2)); } catch (e) { console.error('Error saving messages:', e); }
 }
 
-/* ── Хранилище лидеров ── */
-let leaderboard = []; 
-
 function loadLeaderboard() {
-  try {
-    if (fs.existsSync(LEADERBOARD_FILE)) {
-      leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8'));
-    }
-  } catch (e) { leaderboard = []; }
+  try { if (fs.existsSync(LEADERBOARD_FILE)) leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8')); }
+  catch (e) { leaderboard = []; }
 }
 
 function saveLeaderboard() {
-  try {
-    fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2));
-  } catch (e) { console.error('Ошибка записи лидеров:', e); }
+  try { fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2)); } catch (e) { console.error('Error saving leaderboard:', e); }
 }
 
 function updateLeaderboard(username, score) {
@@ -72,13 +55,8 @@ function updateLeaderboard(username, score) {
   return true;
 }
 
-function getTopLeaderboard(limit = 10) {
-  return leaderboard.slice(0, limit);
-}
-
-/* ── SSE клиенты ── */
+/* ── SSE (Рассылка сообщений) ── */
 const sseClients = new Set();
-
 function broadcast(msg) {
   const data = `data: ${JSON.stringify(msg)}\n\n`;
   for (const res of sseClients) {
@@ -86,7 +64,6 @@ function broadcast(msg) {
   }
 }
 
-/* ── Валидация и CORS ── */
 function setCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -96,36 +73,26 @@ function setCors(res) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let raw = '';
-    req.on('data', chunk => { 
-      raw += chunk; 
-      if (raw.length > 16384) reject(new Error('Too large')); 
-    });
-    req.on('end', () => {
-      try { resolve(raw ? JSON.parse(raw) : {}); } catch (e) { reject(e); }
-    });
+    req.on('data', chunk => { raw += chunk; if (raw.length > 16384) reject(new Error('Too large')); });
+    req.on('end', () => { try { resolve(raw ? JSON.parse(raw) : {}); } catch (e) { resolve({}); } });
     req.on('error', reject);
   });
 }
 
-/* ── HTTP сервер ── */
+/* ── HTTP Сервер ── */
 const server = http.createServer(async (req, res) => {
-  const { pathname } = url.parse(req.url);
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
   const method = req.method;
 
   setCors(res);
+  if (method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-  if (method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-
-  // Раздача HTML
+  // 1. Раздача фронтенда
   if (method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
     try {
-      const html = fs.readFileSync(HTML_FILE);
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(html);
+      res.end(fs.readFileSync(HTML_FILE));
     } catch (e) {
       res.writeHead(404);
       res.end('index.html not found');
@@ -133,42 +100,39 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // API Сообщений
-  if (method === 'GET' && pathname === '/api/messages') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ messages }));
-    return;
-  }
-
-  if (method === 'POST' && pathname === '/api/messages') {
-    try {
+  // 2. API ЧАТА
+  if (pathname === '/api/messages') {
+    if (method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ messages }));
+    } else if (method === 'POST') {
       const body = await readBody(req);
-      const msg = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
-        username: String(body.username || 'Аноним').trim(),
-        text: String(body.text || '').trim(),
-        createdAt: new Date().toISOString(),
-      };
-      if (msg.text) {
+      if (body.text) {
+        const msg = { 
+          id: Date.now(), 
+          username: String(body.username || 'Аноним').substring(0, 30), 
+          text: String(body.text).substring(0, 500), 
+          createdAt: new Date().toISOString() 
+        };
         messages.push(msg);
         if (messages.length > MAX_MESSAGES) messages = messages.slice(-MAX_MESSAGES);
         saveMessages();
         broadcast(msg);
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(msg));
+      } else {
+        res.writeHead(400); res.end();
       }
-      res.writeHead(201, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(msg));
-    } catch (e) {
-      res.writeHead(400);
-      res.end(JSON.stringify({ error: 'Bad request' }));
     }
     return;
   }
 
+  // 3. SSE Стрим
   if (method === 'GET' && pathname === '/api/messages/stream') {
-    res.writeHead(200, {
-      'Content-Type':  'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection':    'keep-alive',
+    res.writeHead(200, { 
+      'Content-Type': 'text/event-stream', 
+      'Cache-Control': 'no-cache', 
+      'Connection': 'keep-alive' 
     });
     res.write(': connected\n\n');
     sseClients.add(res);
@@ -176,33 +140,28 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // API Лидерборда
-  if (method === 'GET' && pathname === '/api/leaderboard') {
+  // 4. API ЛИДЕРБОРДА
+  if (pathname === '/api/leaderboard') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ leaderboard: getTopLeaderboard(10) }));
+    res.end(JSON.stringify({ leaderboard: leaderboard.slice(0, 10) }));
     return;
   }
 
   if (method === 'POST' && pathname === '/api/leaderboard/update') {
-    try {
-      const body = await readBody(req);
-      const updated = updateLeaderboard(body.username, Number(body.score));
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: updated, leaderboard: getTopLeaderboard(10) }));
-    } catch (e) {
-      res.writeHead(400);
-      res.end(JSON.stringify({ error: 'Bad request' }));
-    }
+    const body = await readBody(req);
+    const updated = updateLeaderboard(body.username, Number(body.score));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: updated, leaderboard: leaderboard.slice(0, 10) }));
     return;
   }
 
   res.writeHead(404);
-  res.end(JSON.stringify({ error: 'Not found' }));
+  res.end();
 });
 
 loadMessages();
 loadLeaderboard();
 
 server.listen(PORT, HOST, () => {
-  console.log(`✅ Сервер активен: http://${HOST}:${PORT}`);
+  console.log(`🚀 Server started on http://${HOST}:${PORT}`);
 });
