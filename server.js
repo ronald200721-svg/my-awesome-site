@@ -1,15 +1,18 @@
+/**
+ * Сервер для кликера с общим чатом и таблицей лидеров
+ * Полностью настроен для Render.com
+ */
+
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 const url  = require('url');
 
-/**
- * Настройки для Render
- */
+// На Render порт назначается динамически. Слушаем 0.0.0.0.
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0'; 
 
-// Используем /tmp для записи файлов, так как на Render основная папка только для чтения
+// Директория для данных. /tmp используется для записи файлов на Render.
 const DATA_DIR = process.env.RENDER ? '/tmp' : __dirname;
 
 const HTML_FILE      = path.join(__dirname, 'index.html');
@@ -22,7 +25,7 @@ const MAX_LEADERS  = 50;
 let messages = [];
 let leaderboard = [];
 
-/* ── Загрузка и сохранение данных ── */
+/* ── Работа с данными ── */
 function loadData() {
   try {
     if (fs.existsSync(MESSAGES_FILE)) {
@@ -32,7 +35,7 @@ function loadData() {
       leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8'));
     }
   } catch (e) {
-    console.error("Ошибка при загрузке JSON:", e);
+    console.error("Ошибка загрузки JSON:", e);
   }
 }
 
@@ -60,7 +63,7 @@ function updateLeaderboard(username, score) {
   return true;
 }
 
-/* ── SSE (Рассылка сообщений в чат) ── */
+/* ── SSE (Обновление чата в реальном времени) ── */
 const sseClients = new Set();
 function broadcast(msg) {
   const data = `data: ${JSON.stringify(msg)}\n\n`;
@@ -69,7 +72,7 @@ function broadcast(msg) {
   }
 }
 
-/* ── Чтение тела POST запроса ── */
+/* ── Чтение данных из POST-запросов ── */
 function readBody(req) {
   return new Promise((resolve) => {
     let raw = '';
@@ -80,35 +83,35 @@ function readBody(req) {
   });
 }
 
-/* ── Создание сервера ── */
+/* ── СОЗДАНИЕ СЕРВЕРА ── */
 const server = http.createServer(async (req, res) => {
   const { pathname } = url.parse(req.url);
 
-  // ИСПРАВЛЕНИЕ CORS: Разрешаем запросы с любого адреса
+  // ИСПРАВЛЕНИЕ CORS: Разрешаем сайту обращаться к серверу
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Обработка предварительных запросов (Preflight)
+  // Ответ на технические запросы браузера (CORS Preflight)
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     res.end();
     return;
   }
 
-  // 1. Главная страница (Frontend)
+  // 1. Отдача сайта (Frontend)
   if (req.method === 'GET' && (pathname === '/' || pathname === '/index.html')) {
     try {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(fs.readFileSync(HTML_FILE));
     } catch (e) {
       res.writeHead(404);
-      res.end('Файл index.html не найден');
+      res.end('index.html not found');
     }
     return;
   }
 
-  // 2. ЧАТ: Получить историю
+  // 2. ЧАТ: Получить сообщения
   if (pathname === '/api/messages' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ messages }));
@@ -135,7 +138,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 4. ЧАТ: SSE Стрим
+  // 4. ЧАТ: Подключение для авто-обновления (SSE)
   if (pathname === '/api/messages/stream') {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -148,14 +151,14 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 5. ЛИДЕРБОРД: Получить топ
+  // 5. ЛИДЕРБОРД: Получить список
   if (pathname === '/api/leaderboard' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ leaderboard: leaderboard.slice(0, 10) }));
     return;
   }
 
-  // 6. ЛИДЕРБОРД: Обновить счет
+  // 6. ЛИДЕРБОРД: Сохранить новый рекорд
   if (pathname === '/api/leaderboard/update' && req.method === 'POST') {
     const body = await readBody(req);
     const updated = updateLeaderboard(body.username, Number(body.score));
@@ -164,13 +167,14 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Ошибка 404
+  // Если путь не найден
   res.writeHead(404);
   res.end();
 });
 
-// Запуск
+// Запуск сервера
 loadData();
 server.listen(PORT, HOST, () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+  console.log(`🚀 Сервер успешно запущен!`);
+  console.log(`📡 Порт: ${PORT}`);
 });
