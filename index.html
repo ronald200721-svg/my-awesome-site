@@ -765,6 +765,7 @@
   let gameData = null;
   let lastSentScore = -1;
   let sseSource = null;
+  let passiveInterval = null; // интервал пассивного дохода
 
   const upgrades = [
     { id: 'cursor',  icon: '🖱️', name: 'Курсор',        desc: '+1 за клик',        baseCost: 10,   type: 'click',  value: 1 },
@@ -795,6 +796,7 @@
     return Math.floor(n).toLocaleString();
   }
 
+  // целая стоимость (устраняем дробные копейки)
   function upgradeCost(owned, base) {
     return Math.floor(base * Math.pow(1.15, owned));
   }
@@ -824,7 +826,7 @@
         method: 'POST',
         body: JSON.stringify({ gameData })
       });
-      const currentScore = Math.floor(gameData.coins);
+      const currentScore = gameData.coins; // теперь всегда целое
       if (currentScore !== lastSentScore) {
         lastSentScore = currentScore;
         await authFetch(`${API_BASE}/leaderboard/update`, {
@@ -841,7 +843,7 @@
       const data = await res.json();
       currentUser = data.username;
       gameData = data.gameData;
-      // Округляем монеты при загрузке (на случай старых дробных значений)
+      // Гарантия целых монет
       if (gameData.coins !== undefined) gameData.coins = Math.floor(gameData.coins);
       document.getElementById('currentUsername').textContent = currentUser;
       if (!gameData.upgrades) gameData.upgrades = upgrades.map(() => 0);
@@ -852,7 +854,7 @@
       if (gameData.levelIdx === undefined) gameData.levelIdx = 0;
       renderAll();
       checkAchievements(true);
-      startGameLoop();
+      startPassiveIncome();
       connectChatSSE();
       fetchLeaderboard();
       setInterval(() => fetchLeaderboard(), 15000);
@@ -893,7 +895,7 @@
     upgrades.forEach((u, idx) => {
       const owned = gameData.upgrades[idx] || 0;
       const cost = upgradeCost(owned, u.baseCost);
-      const canAfford = Math.floor(gameData.coins) >= cost;
+      const canAfford = gameData.coins >= cost;
       const btn = document.createElement('div');
       btn.className = `upgrade-btn ${canAfford ? 'affordable' : 'disabled'}`;
       btn.dataset.index = idx;
@@ -915,11 +917,9 @@
     const u = upgrades[idx];
     const owned = gameData.upgrades[idx];
     const cost = upgradeCost(owned, u.baseCost);
-    // Используем Math.floor для точного сравнения целой части монет
-    if (Math.floor(gameData.coins) < cost) return;
+    // строгая проверка на целых монетах
+    if (gameData.coins < cost) return;
     gameData.coins -= cost;
-    // Округляем после покупки, чтобы убрать накопившуюся дробную часть
-    gameData.coins = Math.floor(gameData.coins);
     gameData.upgrades[idx]++;
     if (u.type === 'click') gameData.clickPower += u.value;
     if (u.type === 'auto') gameData.perSecond += u.value;
@@ -954,24 +954,24 @@
     setTimeout(() => el.remove(), 800);
   }
 
-  let lastTick = performance.now();
-  function gameLoop(now) {
-    if (!gameData) return requestAnimationFrame(gameLoop);
-    const dt = Math.min(0.1, (now - lastTick) / 1000);
-    lastTick = now;
-    if (gameData.perSecond > 0) {
-      gameData.coins += gameData.perSecond * dt;
-      // Округляем монеты до целого числа после каждого пассивного тика
-      gameData.coins = Math.floor(gameData.coins);
-      renderAll();
-      checkAchievements();
-      saveGameToServer();
-    }
-    requestAnimationFrame(gameLoop);
+  // Пассивный доход только целыми числами, раз в секунду
+  function startPassiveIncome() {
+    if (passiveInterval) clearInterval(passiveInterval);
+    passiveInterval = setInterval(() => {
+      if (gameData && gameData.perSecond > 0) {
+        gameData.coins += gameData.perSecond;
+        renderAll();
+        checkAchievements();
+        saveGameToServer();
+      }
+    }, 1000);
   }
-  function startGameLoop() {
-    lastTick = performance.now();
-    requestAnimationFrame(gameLoop);
+
+  function stopPassiveIncome() {
+    if (passiveInterval) {
+      clearInterval(passiveInterval);
+      passiveInterval = null;
+    }
   }
 
   function renderAchievements() {
@@ -1119,6 +1119,7 @@
   }
 
   function logout() {
+    stopPassiveIncome();
     token = null;
     localStorage.removeItem('token');
     currentUser = null;
