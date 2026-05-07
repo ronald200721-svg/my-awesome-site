@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Кликер | Таблица лидеров</title>
+  <title>Кликер | Регистрация и Лидеры</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
   <style>
@@ -36,7 +36,6 @@
       overflow-x: hidden;
       user-select: none;
       -webkit-user-select: none;
-      -ms-user-select: none;
       touch-action: pan-x pan-y;
     }
 
@@ -44,70 +43,117 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image:
-        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,.6) 0%, transparent 100%),
-        radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,.5) 0%, transparent 100%),
-        radial-gradient(1px 1px at 55% 75%, rgba(255,255,255,.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 15% 50%, rgba(255,255,255,.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 65% 55%, rgba(255,255,255,.5) 0%, transparent 100%);
+      background: radial-gradient(1px 1px at 15% 30%, rgba(255,255,255,.5) 0%, transparent 100%),
+                  radial-gradient(1px 1px at 45% 70%, rgba(255,255,255,.4) 0%, transparent 100%),
+                  radial-gradient(1px 1px at 75% 20%, rgba(255,255,255,.6) 0%, transparent 100%),
+                  radial-gradient(1px 1px at 90% 85%, rgba(255,255,255,.3) 0%, transparent 100%);
       pointer-events: none;
       z-index: 0;
     }
 
-    h1 {
-      font-size: clamp(1.4rem, 4vw, 2rem);
+    /* Модальное окно */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0.2s, opacity 0.2s;
+    }
+    .modal.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 24px;
+      width: min(360px, 90vw);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .modal-content h2 {
+      font-size: 1.5rem;
       font-weight: 900;
-      letter-spacing: -0.5px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       margin-bottom: 8px;
-      position: relative;
-      z-index: 1;
     }
-
-    .subtitle {
+    .modal-content p {
       color: var(--muted);
-      font-size: .85rem;
-      margin-bottom: 32px;
-      position: relative;
-      z-index: 1;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+    }
+    .modal-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: var(--primary); }
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .modal-btn {
+      flex: 1;
+      background: var(--primary);
+      border: none;
+      border-radius: 40px;
+      padding: 10px;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .modal-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+    }
+    .modal-btn:hover { opacity: 0.8; }
+    .error-msg {
+      color: #f87171;
+      font-size: 0.75rem;
+      margin-top: -10px;
+      margin-bottom: 12px;
     }
 
-    .layout {
+    /* Игровой интерфейс (скрыт до входа) */
+    #gameContainer {
       width: 100%;
       max-width: 1200px;
+      display: none;
+    }
+    .layout {
       display: grid;
       grid-template-columns: 1fr 320px;
       gap: 24px;
-      position: relative;
-      z-index: 1;
     }
-
     @media (max-width: 850px) {
       .layout { grid-template-columns: 1fr; }
     }
-
-    .left {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-    }
-
+    .left { display: flex; flex-direction: column; align-items: center; gap: 24px; }
     .stats {
       width: 100%;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
-
     .stat-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -115,123 +161,21 @@
       padding: 16px 20px;
       text-align: center;
     }
-
-    .stat-label {
-      font-size: .72rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 900;
-      color: var(--text);
-      transition: transform .1s;
-    }
-
-    .stat-value.bump {
-      transform: scale(1.15);
-      color: var(--accent);
-    }
-
-    .click-area {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
+    .stat-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+    .stat-value { font-size: 1.5rem; font-weight: 900; transition: transform 0.1s; }
+    .stat-value.bump { transform: scale(1.15); color: var(--accent); }
     .click-btn {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
+      width: 200px; height: 200px; border-radius: 50%; border: none;
       background: radial-gradient(circle at 35% 35%, #4fa3ff, var(--primary-d));
-      box-shadow:
-        0 0 0 8px rgba(59,130,246,.15),
-        0 0 0 16px rgba(59,130,246,.08),
-        0 20px 60px rgba(59,130,246,.35),
-        inset 0 -4px 12px rgba(0,0,0,.4),
-        inset 0 4px 12px rgba(255,255,255,.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      box-shadow: 0 0 0 8px rgba(59,130,246,.15), 0 0 0 16px rgba(59,130,246,.08), 0 20px 60px rgba(59,130,246,.35);
       font-size: 4rem;
-      transition: transform .08s, box-shadow .08s;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
+      cursor: pointer;
+      transition: transform 0.08s, box-shadow 0.08s;
       position: relative;
       overflow: hidden;
     }
-
-    .click-btn::after {
-      content: '';
-      position: absolute;
-      top: 15%;
-      left: 20%;
-      width: 40%;
-      height: 30%;
-      background: radial-gradient(ellipse, rgba(255,255,255,.3) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-
-    .click-btn:active {
-      transform: scale(.92);
-      box-shadow:
-        0 0 0 4px rgba(59,130,246,.2),
-        0 8px 30px rgba(59,130,246,.25),
-        inset 0 4px 16px rgba(0,0,0,.5),
-        inset 0 -2px 8px rgba(255,255,255,.08);
-    }
-
-    .click-btn:hover:not(:active) {
-      transform: scale(1.04);
-      box-shadow:
-        0 0 0 10px rgba(59,130,246,.2),
-        0 0 0 20px rgba(59,130,246,.1),
-        0 24px 70px rgba(59,130,246,.45),
-        inset 0 -4px 12px rgba(0,0,0,.4),
-        inset 0 4px 12px rgba(255,255,255,.2);
-    }
-
-    .multiplier-badge {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-d));
-      color: #000;
-      font-size: .7rem;
-      font-weight: 900;
-      padding: 4px 8px;
-      border-radius: 999px;
-      display: none;
-      animation: pop .2s ease;
-    }
-
-    .multiplier-badge.visible { display: block; }
-
-    .particle {
-      position: fixed;
-      font-size: 1.2rem;
-      font-weight: 900;
-      color: var(--accent);
-      pointer-events: none;
-      animation: float-up .8s ease forwards;
-      z-index: 999;
-    }
-
-    @keyframes float-up {
-      0%   { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-80px) scale(.6); }
-    }
-
+    .click-btn:active { transform: scale(0.92); }
+    .click-btn:hover:not(:active) { transform: scale(1.04); }
     .progress-wrap {
       width: 100%;
       background: var(--surface);
@@ -239,1108 +183,593 @@
       border-radius: 999px;
       padding: 4px;
     }
-
     .progress-bar {
       height: 10px;
       border-radius: 999px;
       background: linear-gradient(90deg, var(--primary), var(--accent));
-      transition: width .3s ease;
-      box-shadow: 0 0 10px var(--glow);
+      transition: width 0.3s;
     }
-
-    .progress-label {
-      font-size: .72rem;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 6px;
+    .shop, .leaderboard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
     }
-
-    .shop {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
     .shop-title {
-      font-size: .8rem;
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: var(--muted);
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
     }
-
     .upgrade-btn {
-      background: var(--surface);
+      background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 14px 16px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 14px;
-      transition: border-color .2s, background .2s, transform .1s;
-      text-align: left;
-      width: 100%;
-      color: var(--text);
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
+      gap: 12px;
+      transition: 0.1s;
     }
-
-    .upgrade-btn:hover:not(.disabled) {
-      border-color: var(--primary);
-      background: var(--surface2);
-      transform: translateX(3px);
-    }
-
-    .upgrade-btn:active:not(.disabled) {
-      transform: translateX(1px);
-    }
-
-    .upgrade-btn.disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
-    .upgrade-btn.affordable {
-      border-color: rgba(59,130,246,.5);
-      box-shadow: 0 0 12px rgba(59,130,246,.15);
-    }
-
-    .upg-icon {
-      font-size: 1.8rem;
-      flex-shrink: 0;
-      width: 44px;
-      height: 44px;
-      background: var(--surface2);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
+    .upgrade-btn.disabled { opacity: 0.45; cursor: not-allowed; }
+    .upgrade-btn.affordable { border-color: var(--primary); }
+    .upg-icon { font-size: 1.5rem; }
     .upg-info { flex: 1; }
-
-    .upg-name {
-      font-size: .9rem;
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .upg-desc {
-      font-size: .72rem;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .upg-cost {
-      font-size: .78rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .upg-count {
-      font-size: .72rem;
-      font-weight: 700;
-      background: var(--primary);
-      color: #fff;
-      border-radius: 999px;
-      padding: 2px 8px;
-      flex-shrink: 0;
-    }
-
-    .achievements {
-      margin-top: 8px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .achievement {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 6px 10px;
-      font-size: .72rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      opacity: .35;
-      transition: opacity .4s, border-color .4s;
-    }
-
-    .achievement.unlocked {
-      opacity: 1;
-      border-color: var(--accent);
-      box-shadow: 0 0 8px rgba(245,158,11,.2);
-      animation: pop .3s ease;
-    }
-
-    @keyframes pop {
-      0%   { transform: scale(.8); }
-      60%  { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-
-    /* Leaderboard style */
-    .leaderboard {
-      margin-top: 24px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 6px 0;
-    }
-
-    .leaderboard-header {
+    .upg-name { font-weight: 700; font-size: 0.85rem; }
+    .upg-cost { font-size: 0.7rem; color: var(--accent); }
+    .leaderboard-row {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      padding: 12px 16px 8px;
-      border-bottom: 1px solid var(--border);
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-
-    .leaderboard-header .shop-title {
-      margin: 0;
-      padding: 0;
-      border: none;
+    .userbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-bottom: 20px;
     }
-
-    .refresh-leaderboard {
+    .username-badge {
+      background: var(--primary);
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .logout-btn {
       background: none;
       border: 1px solid var(--border);
       color: var(--muted);
-      font-size: .7rem;
-      padding: 4px 10px;
-      border-radius: 20px;
+      padding: 6px 12px;
+      border-radius: 40px;
       cursor: pointer;
-      transition: all .2s;
-      touch-action: manipulation;
+      transition: 0.1s;
     }
-
-    .refresh-leaderboard:hover {
+    .logout-btn:hover {
       border-color: var(--primary);
       color: var(--primary);
     }
 
-    .leaderboard-table {
-      width: 100%;
-      padding: 8px 0;
-    }
-
-    .leaderboard-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 16px;
-      font-size: .85rem;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-    }
-
-    .leaderboard-rank {
-      width: 32px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .leaderboard-name {
-      flex: 1;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-right: 12px;
-    }
-
-    .leaderboard-score {
-      font-weight: 700;
-      font-family: monospace;
-      background: var(--surface2);
-      padding: 2px 8px;
-      border-radius: 20px;
-    }
-
-    .leaderboard-empty {
-      text-align: center;
-      padding: 20px;
-      color: var(--muted);
-      font-size: .8rem;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 32px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--surface2);
-      border: 1px solid var(--accent);
-      color: var(--text);
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: .9rem;
-      font-weight: 600;
-      box-shadow: 0 8px 32px rgba(0,0,0,.4);
-      z-index: 1000;
-      transition: transform .3s ease;
-      white-space: nowrap;
-    }
-
-    .toast.show { transform: translateX(-50%) translateY(0); }
-
-    /* ── Chat ── */
+    /* Чат */
     .chat-section {
       width: 100%;
       max-width: 1200px;
       margin-top: 32px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .chat-box {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 20px;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
     }
-
     .chat-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
+      align-items: center;
+      padding: 12px 20px;
       background: var(--surface2);
-    }
-
-    .chat-header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .chat-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 6px var(--success);
-      animation: pulse-dot 2s infinite;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: .4; }
-    }
-
-    .chat-title {
-      font-size: .8rem;
+      border-bottom: 1px solid var(--border);
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--muted);
     }
-
-    .chat-username-badge {
-      font-size: .75rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .chat-change-name {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: .7rem;
-      padding: 2px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: border-color .2s, color .2s;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .chat-change-name:hover { border-color: var(--primary); color: var(--text); }
-
     .chat-messages {
-      height: 280px;
+      height: 260px;
       overflow-y: auto;
       padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      scroll-behavior: smooth;
     }
-
-    .chat-messages::-webkit-scrollbar { width: 4px; }
-    .chat-messages::-webkit-scrollbar-track { background: transparent; }
-    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
     .chat-msg {
       display: flex;
       gap: 10px;
       align-items: flex-start;
-      animation: msg-in .2s ease;
     }
-
-    @keyframes msg-in {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .chat-msg.own {
+      flex-direction: row-reverse;
     }
-
-    .chat-msg.own { flex-direction: row-reverse; }
-
     .chat-avatar {
       width: 32px;
       height: 32px;
       border-radius: 50%;
+      background: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: .75rem;
-      font-weight: 900;
+      font-weight: bold;
       flex-shrink: 0;
-      color: #fff;
     }
-
-    .chat-bubble-wrap { max-width: 75%; }
-
-    .chat-meta {
-      font-size: .65rem;
-      color: var(--muted);
-      margin-bottom: 3px;
-    }
-
-    .chat-msg.own .chat-meta { text-align: right; }
-
     .chat-bubble {
       background: var(--surface2);
-      border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 8px 12px;
-      font-size: .82rem;
-      line-height: 1.45;
+      padding: 6px 12px;
+      max-width: 70%;
       word-break: break-word;
-      user-select: text;
-      -webkit-user-select: text;
     }
-
     .chat-msg.own .chat-bubble {
-      background: rgba(59,130,246,.18);
-      border-color: rgba(59,130,246,.35);
+      background: rgba(59,130,246,0.2);
     }
-
-    .chat-empty {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--muted);
-      font-size: .82rem;
-    }
-
     .chat-input-row {
       display: flex;
       gap: 8px;
-      padding: 12px 16px;
+      padding: 12px;
       border-top: 1px solid var(--border);
-      background: var(--surface2);
     }
-
     .chat-input {
       flex: 1;
       background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
+      padding: 8px 12px;
       color: var(--text);
       font-family: inherit;
-      font-size: .85rem;
-      padding: 8px 12px;
-      outline: none;
-      transition: border-color .2s;
-      user-select: text;
-      -webkit-user-select: text;
     }
-
-    .chat-input:focus { border-color: var(--primary); }
-    .chat-input::placeholder { color: var(--muted); }
-
     .chat-send {
       background: var(--primary);
       border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: .85rem;
-      font-weight: 700;
-      padding: 8px 16px;
+      border-radius: 12px;
+      padding: 8px 20px;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
-      transition: background .15s, transform .08s;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      flex-shrink: 0;
     }
-
-    .chat-send:hover  { background: var(--primary-d); }
-    .chat-send:active { transform: scale(.95); }
-    .chat-send:disabled { opacity: .4; cursor: not-allowed; }
-
-    /* ── Name dialog overlay ── */
-    .name-overlay {
+    .toast {
       position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      backdrop-filter: blur(4px);
-    }
-
-    .name-dialog {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px 24px;
-      width: min(340px, 90vw);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.5);
-    }
-
-    .name-dialog h2 {
-      font-size: 1.1rem;
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .name-dialog p {
-      font-size: .82rem;
-      color: var(--muted);
-      margin-top: -8px;
-    }
-
-    .name-input {
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
       background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: .9rem;
-      padding: 10px 14px;
-      outline: none;
-      transition: border-color .2s;
-      user-select: text;
-      -webkit-user-select: text;
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 8px 16px;
+      transition: 0.2s;
+      z-index: 1100;
+      font-size: 0.85rem;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .chat-empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 20px;
     }
 
-    .name-input:focus { border-color: var(--primary); }
-
-    .name-submit {
-      background: linear-gradient(135deg, var(--primary), var(--primary-d));
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-family: inherit;
-      font-size: .9rem;
-      font-weight: 700;
-      padding: 11px;
-      cursor: pointer;
-      transition: opacity .15s, transform .08s;
-      touch-action: manipulation;
+    /* Анимация частиц */
+    @keyframes float-up {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-80px) scale(0.6); }
     }
-
-    .name-submit:hover  { opacity: .9; }
-    .name-submit:active { transform: scale(.97); }
+    .particle {
+      position: fixed;
+      z-index: 999;
+      pointer-events: none;
+      font-weight: 900;
+      text-shadow: 0 0 4px black;
+      animation: float-up 0.8s ease forwards;
+    }
   </style>
 </head>
 <body>
 
-<h1>Кликер</h1>
-<p class="subtitle">Нажимай — становись богаче</p>
-
-<div class="layout">
-  <div class="left">
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-label">Монеты</div>
-        <div class="stat-value" id="coins">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">За клик</div>
-        <div class="stat-value" id="per-click">1</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Всего кликов</div>
-        <div class="stat-value" id="total-clicks">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">В секунду</div>
-        <div class="stat-value" id="per-sec">0</div>
-      </div>
+<!-- Модальное окно входа / регистрации -->
+<div id="authModal" class="modal active">
+  <div class="modal-content">
+    <h2>Добро пожаловать</h2>
+    <p>Войдите или зарегистрируйтесь, чтобы играть</p>
+    <div id="authTabs" style="display: flex; gap: 12px; margin-bottom: 20px;">
+      <button id="tabLogin" class="modal-btn" style="background: var(--primary);">Вход</button>
+      <button id="tabRegister" class="modal-btn secondary">Регистрация</button>
     </div>
-
-    <div class="click-area">
-      <button class="click-btn" id="mainBtn" aria-label="Кликнуть">⚡</button>
-      <span class="multiplier-badge" id="multiBadge">x?</span>
+    <div id="loginForm">
+      <input type="text" id="loginUsername" class="modal-input" placeholder="Имя пользователя" autocomplete="off">
+      <input type="password" id="loginPassword" class="modal-input" placeholder="Пароль">
+      <div id="loginError" class="error-msg"></div>
+      <button id="doLogin" class="modal-btn">Войти</button>
     </div>
-
-    <div style="width:100%">
-      <div class="progress-wrap">
-        <div class="progress-bar" id="progressBar" style="width:0%"></div>
-      </div>
-      <div class="progress-label" id="progressLabel">До следующего уровня: 10 кликов</div>
-    </div>
-
-    <div style="width:100%">
-      <div class="shop-title" style="margin-bottom:10px">Достижения</div>
-      <div class="achievements" id="achievements"></div>
-    </div>
-  </div>
-
-  <div class="shop">
-    <div class="shop-title">Магазин улучшений</div>
-    <div id="shopItems"></div>
-
-    <!-- Блок таблицы лидеров -->
-    <div class="leaderboard">
-      <div class="leaderboard-header">
-        <div class="shop-title">🏆 Топ игроков</div>
-        <button class="refresh-leaderboard" id="refreshLeaderboardBtn">⟳ Обновить</button>
-      </div>
-      <div class="leaderboard-table" id="leaderboardList">
-        <div class="leaderboard-empty">Загрузка...</div>
-      </div>
+    <div id="registerForm" style="display: none;">
+      <input type="text" id="regUsername" class="modal-input" placeholder="Имя (3-30 символов)" autocomplete="off">
+      <input type="password" id="regPassword" class="modal-input" placeholder="Пароль (мин. 4)">
+      <div id="regError" class="error-msg"></div>
+      <button id="doRegister" class="modal-btn">Зарегистрироваться</button>
     </div>
   </div>
 </div>
 
-<!-- ── Chat section ── -->
-<div class="chat-section">
-  <div class="chat-box">
-    <div class="chat-header">
-      <div class="chat-header-left">
-        <div class="chat-dot"></div>
-        <div class="chat-title">Общий чат</div>
+<div id="gameContainer">
+  <div class="userbar">
+    <span class="username-badge" id="currentUsername"></span>
+    <button class="logout-btn" id="logoutBtn">Выйти</button>
+  </div>
+  <div class="layout">
+    <div class="left">
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Монеты</div><div class="stat-value" id="coins">0</div></div>
+        <div class="stat-card"><div class="stat-label">За клик</div><div class="stat-value" id="per-click">1</div></div>
+        <div class="stat-card"><div class="stat-label">Всего кликов</div><div class="stat-value" id="total-clicks">0</div></div>
+        <div class="stat-card"><div class="stat-label">В секунду</div><div class="stat-value" id="per-sec">0</div></div>
       </div>
-      <div class="chat-username-badge">
-        <span id="chatNameDisplay"></span>
-        <button class="chat-change-name" id="chatChangeName">Сменить</button>
-      </div>
+      <button class="click-btn" id="mainBtn">⚡</button>
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
     </div>
-    <div class="chat-messages" id="chatMessages">
-      <div class="chat-empty" id="chatEmpty">Сообщений пока нет. Напишите первым!</div>
+    <div>
+      <div class="shop"><div class="shop-title">🏪 Магазин</div><div id="shopItems"></div></div>
+      <div class="leaderboard" style="margin-top: 20px;"><div class="shop-title">🏆 Топ игроков</div><div id="leaderboardList">Загрузка...</div></div>
     </div>
+  </div>
+  <div class="chat-section">
+    <div class="chat-header"><span>💬 Общий чат</span></div>
+    <div class="chat-messages" id="chatMessages"><div class="chat-empty">Сообщений пока нет</div></div>
     <div class="chat-input-row">
-      <input class="chat-input" id="chatInput" type="text" placeholder="Сообщение..." maxlength="1000" autocomplete="off" />
-      <button class="chat-send" id="chatSend">Отправить</button>
+      <input class="chat-input" id="chatInput" placeholder="Сообщение..." maxlength="200">
+      <button class="chat-send" id="chatSend">→</button>
     </div>
   </div>
 </div>
-
-<!-- ── Name overlay ── -->
-<div class="name-overlay" id="nameOverlay">
-  <div class="name-dialog">
-    <h2>Добро пожаловать!</h2>
-    <p>Введите имя, чтобы играть и писать в чат</p>
-    <input class="name-input" id="nameInput" type="text" placeholder="Ваше имя (до 30 символов)" maxlength="30" autocomplete="off" />
-    <button class="name-submit" id="nameSubmit">Войти в игру</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-  /* ── Prevent double-tap zoom ── */
-  let lastTouchEnd = 0;
-  document.addEventListener('touchend', function(e) {
-    const now = Date.now();
-    if (now - lastTouchEnd < 300) e.preventDefault();
-    lastTouchEnd = now;
-  }, { passive: false });
-
-  document.addEventListener('touchstart', function(e) {
-    if (e.touches.length > 1) e.preventDefault();
-  }, { passive: false });
-
-  /* ── API base (исправлено по вашему запросу: двойной https://) ── */
   const API_BASE = '/api';
+  let token = localStorage.getItem('token') || null;
+  let currentUser = null;
+  let gameData = null;
+  let lastSentScore = -1;
+  let sseSource = null;
 
-  /* ── State ── */
-  let coins = 0;
-  let totalClicks = 0;
-  let clickPower = 1;
-  let perSecond = 0;
-
-  /* ── Upgrades config ── */
+  // Конфиг улучшений (соответствует серверной части)
   const upgrades = [
-    { id: 'cursor',  icon: '🖱️',  name: 'Курсор',        desc: '+1 за клик',        baseCost: 10,   owned: 0, type: 'click',  value: 1   },
-    { id: 'helper',  icon: '👷',  name: 'Помощник',       desc: '+1 монета/сек',     baseCost: 50,   owned: 0, type: 'auto',   value: 1   },
-    { id: 'factory', icon: '🏭',  name: 'Фабрика',        desc: '+5 монет/сек',      baseCost: 300,  owned: 0, type: 'auto',   value: 5   },
-    { id: 'mine',    icon: '⛏️',  name: 'Шахта',          desc: '+2 за клик',        baseCost: 200,  owned: 0, type: 'click',  value: 2   },
-    { id: 'rocket',  icon: '🚀',  name: 'Ракета',         desc: '+20 монет/сек',     baseCost: 1500, owned: 0, type: 'auto',   value: 20  },
-    { id: 'laser',   icon: '🔬',  name: 'Лаборатория',    desc: '+10 за клик',       baseCost: 2000, owned: 0, type: 'click',  value: 10  },
-    { id: 'portal',  icon: '🌀',  name: 'Портал',         desc: '+100 монет/сек',    baseCost: 8000, owned: 0, type: 'auto',   value: 100 },
+    { id: 'cursor',  icon: '🖱️', name: 'Курсор', desc: '+1 за клик', baseCost: 10,   type: 'click', value: 1 },
+    { id: 'helper',  icon: '👷', name: 'Помощник', desc: '+1/сек',   baseCost: 50,   type: 'auto',  value: 1 },
+    { id: 'factory', icon: '🏭', name: 'Фабрика', desc: '+5/сек',    baseCost: 300,  type: 'auto',  value: 5 },
+    { id: 'mine',    icon: '⛏️', name: 'Шахта',   desc: '+2 за клик', baseCost: 200,  type: 'click', value: 2 },
+    { id: 'rocket',  icon: '🚀', name: 'Ракета',  desc: '+20/сек',   baseCost: 1500, type: 'auto',  value: 20 },
+    { id: 'laser',   icon: '🔬', name: 'Лаборатория', desc: '+10 за клик', baseCost: 2000, type: 'click', value: 10 },
+    { id: 'portal',  icon: '🌀', name: 'Портал',  desc: '+100/сек',  baseCost: 8000, type: 'auto',  value: 100 }
   ];
-
-  function upgradeCost(u) {
-    return Math.floor(u.baseCost * Math.pow(1.15, u.owned));
-  }
-
-  /* ── Achievements config ── */
-  const achievements = [
-    { id: 'click10',    icon: '👆', label: '10 кликов',       check: () => totalClicks >= 10    },
-    { id: 'click100',   icon: '💯', label: '100 кликов',      check: () => totalClicks >= 100   },
-    { id: 'coins100',   icon: '💰', label: '100 монет',        check: () => coins >= 100         },
-    { id: 'coins1k',    icon: '💎', label: '1 000 монет',      check: () => coins >= 1000        },
-    { id: 'coins10k',   icon: '👑', label: '10 000 монет',     check: () => coins >= 10000       },
-    { id: 'upgrade1',   icon: '🔧', label: 'Первое улучшение', check: () => upgrades.some(u => u.owned > 0) },
-    { id: 'allUpg',     icon: '🏆', label: 'Все улучшения',    check: () => upgrades.every(u => u.owned > 0) },
-  ];
-  const unlockedAch = new Set();
-
-  /* ── Levels ── */
-  const levels = [10, 50, 200, 500, 2000, 5000, 20000, 100000];
-  let levelIdx = 0;
-
-  /* ── LocalStorage save/load ── */
-  const SAVE_KEY = 'clicker_save_v1';
-
-  function saveGame() {
-    const data = { coins, totalClicks, clickPower, perSecond, levelIdx,
-      upgrades: upgrades.map(u => u.owned),
-      achievements: Array.from(unlockedAch) };
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch(e) {}
-  }
-
-  function loadGame() {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      coins       = data.coins       ?? 0;
-      totalClicks = data.totalClicks ?? 0;
-      clickPower  = data.clickPower  ?? 1;
-      perSecond   = data.perSecond   ?? 0;
-      levelIdx    = data.levelIdx    ?? 0;
-      if (Array.isArray(data.upgrades))      data.upgrades.forEach((o,i) => { if (upgrades[i]) upgrades[i].owned = o; });
-      if (Array.isArray(data.achievements))  data.achievements.forEach(id => unlockedAch.add(id));
-    } catch(e) {}
-  }
-
-  /* ── DOM refs ── */
-  const coinsEl       = document.getElementById('coins');
-  const perClickEl    = document.getElementById('per-click');
-  const totalClicksEl = document.getElementById('total-clicks');
-  const perSecEl      = document.getElementById('per-sec');
-  const progressBar   = document.getElementById('progressBar');
-  const progressLabel = document.getElementById('progressLabel');
-  const mainBtn       = document.getElementById('mainBtn');
-  const shopEl        = document.getElementById('shopItems');
-  const achEl         = document.getElementById('achievements');
-  const toastEl       = document.getElementById('toast');
-  const multiBadge    = document.getElementById('multiBadge');
 
   function fmt(n) {
-    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-    return Math.floor(n).toLocaleString('ru');
+    if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+    if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+    return Math.floor(n).toLocaleString();
   }
 
-  function renderStats() {
-    coinsEl.textContent       = fmt(coins);
-    perClickEl.textContent    = fmt(clickPower);
-    totalClicksEl.textContent = fmt(totalClicks);
-    perSecEl.textContent      = fmt(perSecond);
-    const target = levels[Math.min(levelIdx, levels.length - 1)];
-    const prev   = levelIdx > 0 ? levels[levelIdx - 1] : 0;
-    const pct    = Math.min(((totalClicks - prev) / (target - prev)) * 100, 100);
-    progressBar.style.width = pct + '%';
-    if (levelIdx >= levels.length) {
-      progressLabel.textContent = 'Максимальный уровень достигнут!';
-    } else {
-      progressLabel.textContent = `Уровень ${levelIdx + 1} — до следующего: ${fmt(target - totalClicks)} кликов`;
+  function upgradeCost(owned, base) {
+    return Math.floor(base * Math.pow(1.15, owned));
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // Запросы с авторизацией
+  async function authFetch(url, options = {}) {
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      logout();
+      throw new Error('Сессия истекла');
     }
-    if (clickPower > 1) {
-      multiBadge.textContent = `x${clickPower}`;
-      multiBadge.classList.add('visible');
-    } else {
-      multiBadge.classList.remove('visible');
+    return res;
+  }
+
+  // Сохранить игру на сервер
+  async function saveGameToServer() {
+    if (!gameData || !token) return;
+    try {
+      await authFetch(`${API_BASE}/savegame`, {
+        method: 'POST',
+        body: JSON.stringify({ gameData })
+      });
+      if (Math.floor(gameData.coins) !== lastSentScore) {
+        lastSentScore = Math.floor(gameData.coins);
+        await authFetch(`${API_BASE}/leaderboard/update`, {
+          method: 'POST',
+          body: JSON.stringify({ score: gameData.coins })
+        });
+      }
+    } catch(e) { console.warn('save error', e); }
+  }
+
+  // Загрузка данных пользователя после входа
+  async function loadUserData() {
+    try {
+      const res = await authFetch(`${API_BASE}/me`);
+      const data = await res.json();
+      currentUser = data.username;
+      gameData = data.gameData;
+      document.getElementById('currentUsername').textContent = currentUser;
+      if (!gameData.upgrades) gameData.upgrades = upgrades.map(() => 0);
+      if (!gameData.achievements) gameData.achievements = [];
+      renderAll();
+      startGameLoop();
+      connectChatSSE();
+      fetchLeaderboard();
+    } catch(e) {
+      showToast('Ошибка загрузки профиля');
+      logout();
     }
   }
 
-  function buildShop() {
-    shopEl.innerHTML = '';
-    upgrades.forEach((u, i) => {
-      const cost = upgradeCost(u);
-      const canAfford = Math.floor(coins) >= cost;
+  // Рендер всей игры
+  function renderAll() {
+    if (!gameData) return;
+    document.getElementById('coins').textContent = fmt(gameData.coins);
+    document.getElementById('per-click').textContent = fmt(gameData.clickPower);
+    document.getElementById('total-clicks').textContent = fmt(gameData.totalClicks);
+    document.getElementById('per-sec').textContent = fmt(gameData.perSecond);
+    const levels = [10,50,200,500,2000,5000,20000,100000];
+    let levelIdx = gameData.levelIdx || 0;
+    const target = levels[Math.min(levelIdx, levels.length-1)];
+    const prev = levelIdx > 0 ? levels[levelIdx-1] : 0;
+    const pct = Math.min(((gameData.totalClicks - prev) / (target - prev)) * 100, 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+    renderShop();
+  }
+
+  function renderShop() {
+    const container = document.getElementById('shopItems');
+    container.innerHTML = '';
+    upgrades.forEach((u, idx) => {
+      const owned = gameData.upgrades[idx] || 0;
+      const cost = upgradeCost(owned, u.baseCost);
+      const canAfford = gameData.coins >= cost;
       const btn = document.createElement('div');
-      btn.className = 'upgrade-btn' + (canAfford ? ' affordable' : ' disabled');
-      btn.dataset.index = i;
+      btn.className = `upgrade-btn ${canAfford ? 'affordable' : 'disabled'}`;
       btn.innerHTML = `
-        <span class="upg-icon">${u.icon}</span>
-        <span class="upg-info">
+        <div class="upg-icon">${u.icon}</div>
+        <div class="upg-info">
           <div class="upg-name">${u.name}</div>
-          <div class="upg-desc">${u.desc}</div>
-          <div class="upg-cost" data-cost>💰 ${fmt(cost)}</div>
-        </span>
-        <span class="upg-count" data-count style="display:${u.owned > 0 ? 'inline' : 'none'}">${u.owned}</span>
+          <div class="upg-cost">💰 ${fmt(cost)}</div>
+        </div>
+        <div>${owned > 0 ? owned : ''}</div>
       `;
-      shopEl.appendChild(btn);
+      btn.onclick = () => buyUpgrade(idx);
+      container.appendChild(btn);
     });
   }
 
-  function updateShop() {
-    const buttons = shopEl.querySelectorAll('.upgrade-btn');
-    buttons.forEach((btn, i) => {
-      const u = upgrades[i];
-      const cost = upgradeCost(u);
-      const canAfford = Math.floor(coins) >= cost;
-      btn.classList.toggle('affordable', canAfford);
-      btn.classList.toggle('disabled', !canAfford);
-      const costEl = btn.querySelector('[data-cost]');
-      if (costEl) costEl.textContent = `💰 ${fmt(cost)}`;
-      const countEl = btn.querySelector('[data-count]');
-      if (countEl) { countEl.textContent = u.owned; countEl.style.display = u.owned > 0 ? 'inline' : 'none'; }
-    });
-  }
-
-  shopEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('.upgrade-btn');
-    if (!btn || btn.classList.contains('disabled')) return;
-    buyUpgrade(parseInt(btn.dataset.index, 10));
-  });
-
-  shopEl.addEventListener('touchend', (e) => {
-    const btn = e.target.closest('.upgrade-btn');
-    if (!btn || btn.classList.contains('disabled')) return;
-    e.preventDefault();
-    buyUpgrade(parseInt(btn.dataset.index, 10));
-  }, { passive: false });
-
-  function buyUpgrade(i) {
-    const u = upgrades[i];
-    const cost = upgradeCost(u);
-    if (Math.floor(coins) < cost) return;
-    coins -= cost;
-    u.owned++;
-    if (u.type === 'click') clickPower += u.value;
-    if (u.type === 'auto')  perSecond  += u.value;
-    renderStats();
-    updateShop();
-    checkAchievements();
-    saveGame();
-    scheduleLeaderboardUpdate();
+  function buyUpgrade(idx) {
+    const u = upgrades[idx];
+    const owned = gameData.upgrades[idx];
+    const cost = upgradeCost(owned, u.baseCost);
+    if (gameData.coins < cost) return;
+    gameData.coins -= cost;
+    gameData.upgrades[idx]++;
+    if (u.type === 'click') gameData.clickPower += u.value;
+    if (u.type === 'auto') gameData.perSecond += u.value;
+    renderAll();
+    saveGameToServer();
   }
 
   function handleClick(clientX, clientY) {
-    coins += clickPower;
-    totalClicks++;
-    if (levelIdx < levels.length && totalClicks >= levels[levelIdx]) {
-      levelIdx++;
-      showToast(`Уровень ${levelIdx}! Поздравляем!`);
+    gameData.coins += gameData.clickPower;
+    gameData.totalClicks++;
+    const levels = [10,50,200,500,2000,5000,20000,100000];
+    if (gameData.levelIdx < levels.length && gameData.totalClicks >= levels[gameData.levelIdx]) {
+      gameData.levelIdx++;
+      showToast(`Уровень ${gameData.levelIdx}!`);
     }
-    renderStats();
-    updateShop();
-    checkAchievements();
-    spawnParticle(clientX, clientY, `+${fmt(clickPower)}`);
-    coinsEl.classList.remove('bump');
-    void coinsEl.offsetWidth;
+    renderAll();
+    saveGameToServer();
+    spawnParticle(clientX, clientY, `+${fmt(gameData.clickPower)}`);
+    const coinsEl = document.getElementById('coins');
     coinsEl.classList.add('bump');
-    saveGame();
-    scheduleLeaderboardUpdate();
+    setTimeout(() => coinsEl.classList.remove('bump'), 150);
   }
-
-  mainBtn.addEventListener('click', (e) => handleClick(e.clientX, e.clientY));
-  mainBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    const t = e.changedTouches[0];
-    handleClick(t.clientX, t.clientY);
-  }, { passive: false });
 
   function spawnParticle(x, y, text) {
     const el = document.createElement('div');
     el.className = 'particle';
     el.textContent = text;
-    el.style.left = (x - 20 + Math.random() * 40 - 20) + 'px';
-    el.style.top  = (y - 20) + 'px';
+    el.style.left = (x - 20 + Math.random() * 40) + 'px';
+    el.style.top = (y - 20) + 'px';
     document.body.appendChild(el);
-    el.addEventListener('animationend', () => el.remove());
+    setTimeout(() => el.remove(), 800);
   }
 
   let lastTick = performance.now();
-  let saveTimer = 0;
-  function tick(now) {
-    const dt = (now - lastTick) / 1000;
+  function gameLoop(now) {
+    if (!gameData) return requestAnimationFrame(gameLoop);
+    const dt = Math.min(0.1, (now - lastTick) / 1000);
     lastTick = now;
-    if (perSecond > 0) { 
-      coins += perSecond * dt; 
-      renderStats(); 
-      updateShop(); 
-      checkAchievements();
-      scheduleLeaderboardUpdate();
+    if (gameData.perSecond > 0) {
+      gameData.coins += gameData.perSecond * dt;
+      renderAll();
+      saveGameToServer();
     }
-    saveTimer += dt;
-    if (saveTimer >= 5) { saveTimer = 0; saveGame(); }
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-
-  function renderAchievements() {
-    achEl.innerHTML = '';
-    achievements.forEach(a => {
-      const el = document.createElement('div');
-      el.className = 'achievement' + (unlockedAch.has(a.id) ? ' unlocked' : '');
-      el.textContent = `${a.icon} ${a.label}`;
-      achEl.appendChild(el);
-    });
+    requestAnimationFrame(gameLoop);
   }
 
-  function checkAchievements() {
-    let changed = false;
-    achievements.forEach(a => {
-      if (!unlockedAch.has(a.id) && a.check()) {
-        unlockedAch.add(a.id);
-        changed = true;
-        showToast(`Достижение: ${a.icon} ${a.label}`);
-      }
-    });
-    if (changed) renderAchievements();
+  function startGameLoop() {
+    lastTick = performance.now();
+    requestAnimationFrame(gameLoop);
   }
 
-  let toastTimer;
-  function showToast(msg) {
-    clearTimeout(toastTimer);
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
-  }
-
-  /* ════════════════════════════════════════
-        ЛИДЕРБОРД (мгновенное обновление)
-  ════════════════════════════════════════ */
-  let lastSentScore = -1;
-
-  async function updateLeaderboardOnServer(score) {
-    const username = chatUsername;
-    if (!username || username.length === 0) return false;
-    try {
-      const res = await fetch(`${API_BASE}/leaderboard/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, score: Math.floor(score) })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.leaderboard) renderLeaderboard(data.leaderboard);
-        return true;
-      }
-    } catch(e) { console.warn('Leaderboard update failed', e); }
-    return false;
-  }
-
-  async function fetchLeaderboard() {
-    try {
-      const res = await fetch(`${API_BASE}/leaderboard`);
-      if (res.ok) {
-        const data = await res.json();
-        renderLeaderboard(data.leaderboard);
-      }
-    } catch(e) { console.warn('Fetch leaderboard failed', e); }
-  }
-
-  function renderLeaderboard(leaders) {
-    const container = document.getElementById('leaderboardList');
-    if (!container) return;
-    if (!leaders || leaders.length === 0) {
-      container.innerHTML = '<div class="leaderboard-empty">Пока никого нет. Стань первым! 🏆</div>';
-      return;
-    }
-    const html = leaders.map((entry, idx) => {
-      const rank = idx + 1;
-      let medal = '';
-      if (rank === 1) medal = '🥇 ';
-      else if (rank === 2) medal = '🥈 ';
-      else if (rank === 3) medal = '🥉 ';
-      return `
-        <div class="leaderboard-row">
-          <div class="leaderboard-rank">${medal || rank}</div>
-          <div class="leaderboard-name" title="${escapeHtml(entry.username)}">${escapeHtml(entry.username)}</div>
-          <div class="leaderboard-score">💰 ${fmt(entry.score)}</div>
-        </div>
-      `;
-    }).join('');
-    container.innerHTML = html;
-  }
-
-  function scheduleLeaderboardUpdate() {
-    if (!chatUsername) return;
-    const currentScore = Math.floor(coins);
-    if (currentScore === lastSentScore) return;
-    lastSentScore = currentScore;
-    updateLeaderboardOnServer(coins);
-  }
-
-  document.getElementById('refreshLeaderboardBtn')?.addEventListener('click', () => fetchLeaderboard());
-
-  /* ════════════════════════════════════════
-        ОБЩИЙ ЧАТ (реальный)
-  ════════════════════════════════════════ */
-  const CHAT_NAME_KEY = 'clicker_chat_name';
-
-  const nameOverlay    = document.getElementById('nameOverlay');
-  const nameInput      = document.getElementById('nameInput');
-  const nameSubmit     = document.getElementById('nameSubmit');
-  const chatMessages   = document.getElementById('chatMessages');
-  const chatEmpty      = document.getElementById('chatEmpty');
-  const chatInput      = document.getElementById('chatInput');
-  const chatSend       = document.getElementById('chatSend');
-  const chatNameDisplay= document.getElementById('chatNameDisplay');
-  const chatChangeName = document.getElementById('chatChangeName');
-
-  let chatUsername = localStorage.getItem(CHAT_NAME_KEY) || '';
-  let knownIds = new Set();
-  let sseSource = null;
-
-  function usernameColor(name) {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
-    return `hsl(${Math.abs(h) % 360}, 65%, 52%)`;
-  }
-
-  function relTime(iso) {
-    const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
-    if (diff < 60)   return 'только что';
-    if (diff < 3600) return `${Math.floor(diff/60)} мин назад`;
-    if (diff < 86400)return `${Math.floor(diff/3600)} ч назад`;
-    return new Date(iso).toLocaleDateString('ru');
-  }
-
-  function escapeHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function appendMessage(msg) {
-    if (knownIds.has(msg.id)) return;
-    knownIds.add(msg.id);
-    chatEmpty.style.display = 'none';
-    const isOwn = msg.username === chatUsername;
-    const initials = msg.username.slice(0,2).toUpperCase();
-    const color = usernameColor(msg.username);
-    const div = document.createElement('div');
-    div.className = 'chat-msg' + (isOwn ? ' own' : '');
-    div.innerHTML = `
-      <div class="chat-avatar" style="background:${color}">${initials}</div>
-      <div class="chat-bubble-wrap">
-        <div class="chat-meta">${isOwn ? 'Вы' : escapeHtml(msg.username)} · ${relTime(msg.createdAt)}</div>
-        <div class="chat-bubble">${escapeHtml(msg.text)}</div>
-      </div>
-    `;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  async function loadMessages() {
-    try {
-      const res = await fetch(`${API_BASE}/messages`);
-      if (!res.ok) return;
-      const data = await res.json();
-      (data.messages || []).forEach(appendMessage);
-    } catch(e) {}
-  }
-
-  function connectSSE() {
+  // Чат
+  function connectChatSSE() {
     if (sseSource) sseSource.close();
     sseSource = new EventSource(`${API_BASE}/messages/stream`);
     sseSource.onmessage = (e) => {
-      try { appendMessage(JSON.parse(e.data)); } catch(_) {}
+      const msg = JSON.parse(e.data);
+      appendMessage(msg);
     };
-    sseSource.onerror = () => {
-      sseSource.close();
-      setTimeout(connectSSE, 3000);
-    };
+    sseSource.onerror = () => setTimeout(connectChatSSE, 5000);
+    loadMessages();
+  }
+
+  async function loadMessages() {
+    const res = await fetch(`${API_BASE}/messages`);
+    const data = await res.json();
+    const container = document.getElementById('chatMessages');
+    container.innerHTML = '';
+    (data.messages || []).forEach(m => appendMessage(m, false));
+  }
+
+  function appendMessage(msg, scroll = true) {
+    const container = document.getElementById('chatMessages');
+    const emptyDiv = container.querySelector('.chat-empty');
+    if (emptyDiv) emptyDiv.remove();
+    const isOwn = msg.username === currentUser;
+    const div = document.createElement('div');
+    div.className = `chat-msg ${isOwn ? 'own' : ''}`;
+    const initials = msg.username.slice(0,2).toUpperCase();
+    div.innerHTML = `
+      <div class="chat-avatar">${initials}</div>
+      <div class="chat-bubble"><strong>${escapeHtml(msg.username)}</strong><br>${escapeHtml(msg.text)}<br><span style="font-size:10px;color:#aaa;">${new Date(msg.createdAt).toLocaleTimeString()}</span></div>
+    `;
+    container.appendChild(div);
+    if (scroll) container.scrollTop = container.scrollHeight;
   }
 
   async function sendMessage() {
-    const text = chatInput.value.trim();
-    if (!text || !chatUsername) return;
-    chatSend.disabled = true;
-    chatInput.value = '';
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
     try {
-      await fetch(`${API_BASE}/messages`, {
+      await authFetch(`${API_BASE}/messages`, {
+        method: 'POST',
+        body: JSON.stringify({ text })
+      });
+    } catch(e) { showToast('Ошибка отправки'); input.value = text; }
+  }
+
+  async function fetchLeaderboard() {
+    const res = await fetch(`${API_BASE}/leaderboard`);
+    const data = await res.json();
+    const container = document.getElementById('leaderboardList');
+    if (!data.leaderboard.length) { container.innerHTML = 'Пока никого нет'; return; }
+    container.innerHTML = data.leaderboard.map((l, i) => `
+      <div class="leaderboard-row">
+        <span>${i+1}. ${escapeHtml(l.username)}</span>
+        <span>💰 ${fmt(l.score)}</span>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function(m){
+      if(m==='&') return '&amp;';
+      if(m==='<') return '&lt;';
+      if(m==='>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Авторизация
+  async function login(username, password) {
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: chatUsername, text }),
+        body: JSON.stringify({ username, password })
       });
-    } catch(e) {
-      chatInput.value = text;
-    }
-    chatSend.disabled = false;
-    chatInput.focus();
+      const data = await res.json();
+      if (data.success) {
+        token = data.token;
+        localStorage.setItem('token', token);
+        document.getElementById('authModal').classList.remove('active');
+        document.getElementById('gameContainer').style.display = 'block';
+        await loadUserData();
+        setInterval(() => fetchLeaderboard(), 15000);
+        return true;
+      } else {
+        document.getElementById('loginError').innerText = data.error;
+        return false;
+      }
+    } catch(e) { document.getElementById('loginError').innerText = 'Ошибка сети'; return false; }
   }
 
-  chatSend.addEventListener('click', sendMessage);
-  chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-
-  function showNameOverlay() {
-    nameOverlay.style.display = 'flex';
-    nameInput.value = '';
-    setTimeout(() => nameInput.focus(), 50);
+  async function register(username, password) {
+    try {
+      const res = await fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Регистрация успешна! Теперь войдите');
+        document.getElementById('tabLogin').click();
+        return true;
+      } else {
+        document.getElementById('regError').innerText = data.error;
+        return false;
+      }
+    } catch(e) { document.getElementById('regError').innerText = 'Ошибка'; return false; }
   }
 
-  function hideNameOverlay() {
-    nameOverlay.style.display = 'none';
+  function logout() {
+    token = null;
+    localStorage.removeItem('token');
+    currentUser = null;
+    gameData = null;
+    if (sseSource) sseSource.close();
+    document.getElementById('gameContainer').style.display = 'none';
+    document.getElementById('authModal').classList.add('active');
   }
 
-  function applyUsername(name) {
-    if (!name.trim()) return;
-    chatUsername = name.trim();
-    localStorage.setItem(CHAT_NAME_KEY, chatUsername);
-    chatNameDisplay.textContent = chatUsername;
-    hideNameOverlay();
-    lastSentScore = -1;
-    scheduleLeaderboardUpdate();
-    fetchLeaderboard();
+  // Переключение вкладок
+  document.getElementById('tabLogin').onclick = () => {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('tabLogin').style.background = 'var(--primary)';
+    document.getElementById('tabRegister').style.background = 'transparent';
+  };
+  document.getElementById('tabRegister').onclick = () => {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('tabRegister').style.background = 'var(--primary)';
+    document.getElementById('tabLogin').style.background = 'transparent';
+  };
+  document.getElementById('doLogin').onclick = () => login(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value);
+  document.getElementById('doRegister').onclick = () => register(document.getElementById('regUsername').value, document.getElementById('regPassword').value);
+  document.getElementById('logoutBtn').onclick = logout;
+  document.getElementById('mainBtn').onclick = (e) => handleClick(e.clientX, e.clientY);
+  document.getElementById('chatSend').onclick = sendMessage;
+  document.getElementById('chatInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+
+  // Проверка токена при загрузке
+  if (token) {
+    (async () => {
+      try {
+        const res = await authFetch(`${API_BASE}/me`);
+        if (res.ok) {
+          document.getElementById('authModal').classList.remove('active');
+          document.getElementById('gameContainer').style.display = 'block';
+          await loadUserData();
+          setInterval(() => fetchLeaderboard(), 15000);
+        } else logout();
+      } catch(e) { logout(); }
+    })();
   }
-
-  nameSubmit.addEventListener('click', () => {
-    const v = nameInput.value.trim();
-    if (!v) return;
-    applyUsername(v);
-  });
-
-  nameInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { const v = nameInput.value.trim(); if (v) applyUsername(v); }
-  });
-
-  chatChangeName.addEventListener('click', () => {
-    showNameOverlay();
-  });
-
-  /* ── Инициализация игры и чата ── */
-  loadGame();
-  renderStats();
-  buildShop();
-  renderAchievements();
-
-  if (chatUsername) {
-    chatNameDisplay.textContent = chatUsername;
-    hideNameOverlay();
-    fetchLeaderboard();
-    scheduleLeaderboardUpdate();
-  } else {
-    showNameOverlay();
-  }
-
-  loadMessages();
-  connectSSE();
 </script>
 </body>
 </html>
