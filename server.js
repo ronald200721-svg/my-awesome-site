@@ -163,5 +163,5 @@ loadMessages();
 loadLeaderboard();
 
 server.listen(PORT, HOST, () => {
-  console.log(`🚀 Server started on http://${HOST}:${PORT}`);
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
