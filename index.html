@@ -1124,10 +1124,9 @@
   }
 
   /* ════════════════════════════════════════
-        ЛИДЕРБОРД (серверная часть)
+        ЛИДЕРБОРД (мгновенное обновление)
   ════════════════════════════════════════ */
   let lastSentScore = -1;
-  let leaderboardUpdateTimeout = null;
 
   async function updateLeaderboardOnServer(score) {
     const username = chatUsername;
@@ -1185,12 +1184,8 @@
     if (!chatUsername) return;
     const currentScore = Math.floor(coins);
     if (currentScore === lastSentScore) return;
-    if (leaderboardUpdateTimeout) clearTimeout(leaderboardUpdateTimeout);
-    leaderboardUpdateTimeout = setTimeout(() => {
-      lastSentScore = Math.floor(coins);
-      updateLeaderboardOnServer(coins);
-      leaderboardUpdateTimeout = null;
-    }, 2000);
+    lastSentScore = currentScore;
+    updateLeaderboardOnServer(coins);
   }
 
   document.getElementById('refreshLeaderboardBtn')?.addEventListener('click', () => fetchLeaderboard());
