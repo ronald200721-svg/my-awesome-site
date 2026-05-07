@@ -1,0 +1,48 @@
+{
+  "677": {
+    "passwordHash": "e23ab2acaf9053d97c8089241b58104ec705bd00f36c23f8010b649ee19e78c3",
+    "salt": "aade6522339b0829ec3bb441fa296fc1",
+    "gameData": {
+      "coins": 133,
+      "totalClicks": 81,
+      "clickPower": 2,
+      "perSecond": 0,
+      "levelIdx": 2,
+      "upgrades": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "achievements": []
+    }
+  },
+  "RET": {
+    "passwordHash": "3045e0b66695beebc12bdbc077c13103a90bc8e625cd39255be2f9321b91414d",
+    "salt": "542943b6c80153cf1f84d344d81312f8",
+    "gameData": {
+      "coins": 152,
+      "totalClicks": 152,
+      "clickPower": 1,
+      "perSecond": 0,
+      "levelIdx": 2,
+      "upgrades": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "achievements": [
+        "click10",
+        "click100",
+        "coins100"
+      ]
+    }
+  }
+}
